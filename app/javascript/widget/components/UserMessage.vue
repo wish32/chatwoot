@@ -57,7 +57,7 @@ export default {
     },
     readableTime() {
       const { created_at: createdAt = '' } = this.message;
-      return messageStamp(createdAt);
+      return messageStamp(createdAt, 'HH:mm');
     },
     isFailed() {
       const { status = '' } = this.message;
@@ -126,6 +126,7 @@ export default {
               :message="message.content"
               :status="message.status"
               :widget-color="widgetColor"
+              :readable-time="readableTime"
             />
             <div
               v-if="hasAttachments"

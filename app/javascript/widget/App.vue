@@ -22,6 +22,7 @@ import { useRouter } from 'vue-router';
 import { useAvailability } from 'widget/composables/useAvailability';
 import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents';
 import { emitter } from 'shared/helpers/mitt';
+import { PRODUCT_COLOR } from 'shared/constants/productColor';
 
 export default {
   name: 'App',
@@ -90,10 +91,10 @@ export default {
     },
   },
   mounted() {
-    const { websiteToken, locale, widgetColor } = window.chatwootWebChannel;
+    const { websiteToken, locale } = window.chatwootWebChannel;
     this.setLocale(locale);
-    this.setWidgetColor(widgetColor);
-    this.setWidgetColorVariable(widgetColor);
+    this.setWidgetColor(PRODUCT_COLOR);
+    this.setWidgetColorVariable(PRODUCT_COLOR);
     setHeader(window.authToken);
     if (this.isIFrame) {
       this.registerListeners();
@@ -386,7 +387,7 @@ export default {
       'is-widget-right': isRightAligned,
       'is-bubble-hidden': hideMessageBubble,
       'is-flat-design': isWidgetStyleFlat,
-      'bg-n-slate-2 dark:bg-n-solid-1': !isUnreadOrCampaignView,
+      'takehk-chat-canvas dark:bg-n-solid-1': !isUnreadOrCampaignView,
       dark: prefersDarkMode,
     }"
   >

@@ -30,6 +30,7 @@ import { domPurifyConfig } from 'shared/helpers/HTMLSanitizer.js';
 
 import { vResizeObserver } from '@vueuse/components';
 import { directive as onClickaway } from 'vue3-click-away';
+import { replaceBrandInMessages } from 'shared/helpers/productBrand';
 
 import 'floating-vue/dist/style.css';
 import '@chatwoot/viz/style.css';
@@ -37,7 +38,7 @@ import '@chatwoot/viz/style.css';
 const i18n = createI18n({
   legacy: false, // https://github.com/intlify/vue-i18n/issues/1902
   locale: 'en',
-  messages: i18nMessages,
+  messages: replaceBrandInMessages(i18nMessages),
 });
 
 sync(store, router);

@@ -39,6 +39,17 @@
   </head>
   <body>
     <div id="app" class="h-full"></div>
+    <script>
+      if (new URLSearchParams(window.location.search).get('hero_dock') === '1') {
+        window.addEventListener('keydown', function (event) {
+          if (event.key !== 'Escape') return;
+          window.parent.postMessage(
+            'chatwoot-widget:' + JSON.stringify({ event: 'closeWindow' }),
+            '*'
+          );
+        });
+      }
+    </script>
     <%= yield %>
   </body>
 </html>

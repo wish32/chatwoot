@@ -5,6 +5,8 @@ task before_assets_precompile: :environment do
   system('pnpm install')
   system('echo "-------------- Bulding SDK for Production --------------"')
   system('pnpm run build:sdk')
+  system('echo "-------------- Building hero dock for Production --------------"')
+  system('pnpm run build:hero-dock')
   system('echo "-------------- Bulding App for Production --------------"')
 end
 

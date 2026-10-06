@@ -21,6 +21,7 @@ export default {
   },
   props: {
     message: { type: String, default: null },
+    readableTime: { type: String, default: '' },
     contentType: { type: String, default: null },
     messageType: { type: Number, default: null },
     messageId: { type: Number, default: null },
@@ -101,6 +102,9 @@ export default {
         v-dompurify-html="formatMessage(message, false)"
         class="message-content text-n-slate-12 [&>ul:not(:last-child)]:mb-4 [&>ol:not(:last-child)]:mb-4"
       />
+      <span v-if="readableTime && message" class="wa-time">{{
+        readableTime
+      }}</span>
       <EmailInput
         v-if="isTemplateEmail"
         :message-id="messageId"

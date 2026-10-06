@@ -58,7 +58,15 @@ Rails.application.configure do
 
   # Use an evented file watcher to asynchronously detect changes in source code,
   # routes, locales, etc. This feature depends on the listen gem.
-  config.file_watcher = ActiveSupport::EventedFileUpdateChecker
+  # HKSS_DOCKER_DEV: Windows bind mounts do not emit inotify events. Poll in the
+  # background (LISTEN_USE_POLLING) instead of stat-ing the tree on every request.
+  # Rails and Sidekiq also cannot share one log file on that mount.
+  if ENV['HKSS_DOCKER_DEV'] == 'true'
+    config.file_watcher = ActiveSupport::EventedFileUpdateChecker
+    config.logger = ActiveSupport::Logger.new($stdout)
+  else
+    config.file_watcher = ActiveSupport::EventedFileUpdateChecker
+  end
 
   # Disable host check during development
   config.hosts = nil
@@ -77,7 +85,7 @@ Rails.application.configure do
 
   # Use a different logger for distributed setups.
   # require 'syslog/logger'
-  config.logger = ActiveSupport::Logger.new(Rails.root.join('log', "#{Rails.env}.log"), 1, ENV.fetch('LOG_SIZE', '1024').to_i.megabytes)
+  config.logger ||= ActiveSupport::Logger.new(Rails.root.join('log', "#{Rails.env}.log"), 1, ENV.fetch('LOG_SIZE', '1024').to_i.megabytes)
 
   # Bullet configuration to fix the N+1 queries
   config.after_initialize do

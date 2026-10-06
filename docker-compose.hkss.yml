@@ -1,0 +1,92 @@
+# HKSS development stack for this fork (branch custom).
+#
+# Postgres, Redis and desk-agent stay in hkss-market/deploy/chatwoot.
+# This file only runs Chatwoot from the source tree, with Vite on :3036.
+#
+#   docker compose -f docker-compose.hkss.yml up -d --build
+#   docker compose -f docker-compose.hkss.yml logs -f rails
+#
+# UI:   http://127.0.0.1:3000
+# Vite: run on the Windows host with scripts/hkss-vite.ps1 (port 3036).
+#       Do not publish 3036 from this container; that port belongs to the host.
+# Do not start docker-compose.yaml in this repo (it binds 5432, 6379 and 3000).
+
+name: chatwoot-dev
+
+services:
+  rails:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.hkss-dev
+    image: chatwoot:hkss-dev
+    container_name: chatwoot-dev-rails
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: enabled
+      HKSS_DOCKER_DEV: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      HUSKY: "0"
+      BUNDLE_WITHOUT: ""
+      VITE_RUBY_HOST: localhost
+      VITE_RUBY_SKIP_PROXY: "true"
+      LISTEN_USE_POLLING: "true"
+    volumes:
+      - ./:/app
+      - dev_node_modules:/app/node_modules
+      - chatwoot_storage:/app/storage
+    ports:
+      - "127.0.0.1:3000:3000"
+    extra_hosts:
+      - "partner.take.com:host-gateway"
+      - "host.docker.internal:host-gateway"
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["sh", "docker/entrypoints/hkss-dev.sh"]
+    healthcheck:
+      test: ["CMD", "ruby", "-e", "require 'socket'; TCPSocket.new('127.0.0.1', 3000).close"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+      start_period: 600s
+    restart: unless-stopped
+    networks:
+      desk:
+        aliases:
+          - chatwoot-rails
+
+  sidekiq:
+    image: chatwoot:hkss-dev
+    container_name: chatwoot-dev-sidekiq
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: enabled
+      HKSS_DOCKER_DEV: "true"
+      HUSKY: "0"
+      BUNDLE_WITHOUT: ""
+    volumes:
+      - ./:/app
+      - dev_node_modules:/app/node_modules
+      - chatwoot_storage:/app/storage
+    extra_hosts:
+      - "partner.take.com:host-gateway"
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    depends_on:
+      rails:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [desk]
+
+networks:
+  desk:
+    name: docker_default
+    external: true
+
+volumes:
+  dev_node_modules:
+  chatwoot_storage:
+    name: docker_chatwoot_storage
+    external: true

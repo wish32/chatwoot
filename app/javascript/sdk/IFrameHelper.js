@@ -21,6 +21,7 @@ import {
   removeUnreadClass,
 } from './bubbleHelpers';
 import { isWidgetColorLighter } from 'shared/helpers/colorHelper';
+import { PRODUCT_COLOR } from 'shared/constants/productColor';
 import { dispatchWindowEvent } from 'shared/helpers/CustomEventHelper';
 import {
   CHATWOOT_ERROR,
@@ -174,7 +175,7 @@ export const IFrameHelper = {
         enableEndConversation: window.$chatwoot.enableEndConversation,
       });
       IFrameHelper.onLoad({
-        widgetColor: message.config.channelConfig.widgetColor,
+        widgetColor: PRODUCT_COLOR,
       });
       IFrameHelper.toggleCloseButton();
 
@@ -327,8 +328,8 @@ export const IFrameHelper = {
 
     addClasses(closeBubble, closeBtnClassName);
 
-    chatIcon.style.background = widgetColor;
-    closeBubble.style.background = widgetColor;
+    chatIcon.style.setProperty('background', widgetColor, 'important');
+    closeBubble.style.setProperty('background', widgetColor, 'important');
 
     bubbleHolder.appendChild(chatIcon);
     bubbleHolder.appendChild(closeBubble);

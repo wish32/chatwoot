@@ -146,3 +146,12 @@ body {
     letter-spacing: -0.24px;
   }
 }
+
+.takehk-chat-canvas {
+  background-color: #f2f3f7;
+}
+
+.dark .takehk-chat-canvas,
+.takehk-chat-canvas.dark {
+  background-color: #1c1c21;
+}

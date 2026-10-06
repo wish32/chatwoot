@@ -7,6 +7,7 @@ import {
   initializeAnalyticsEvents,
   initializeChatwootEvents,
 } from 'dashboard/helper/scriptHelpers';
+import { replaceBrandInMessages } from 'shared/helpers/productBrand';
 import App from '../v3/App.vue';
 import router, { initalizeRouter } from '../v3/views/index';
 import store from '../v3/store';
@@ -20,7 +21,7 @@ import FluentIcon from 'shared/components/FluentIcon/DashboardIcon.vue';
 const i18n = createI18n({
   legacy: false, // https://github.com/intlify/vue-i18n/issues/1902
   locale: 'en',
-  messages: i18nMessages,
+  messages: replaceBrandInMessages(i18nMessages),
 });
 
 const app = createApp(App);

@@ -13,6 +13,7 @@
     "dev": "overmind start -f ./Procfile.dev",
     "ruby:prettier": "bundle exec rubocop -a",
     "build:sdk": "vite build --config vite.lib.config.ts",
+    "build:hero-dock": "vite build --config vite.hero-dock.config.ts",
     "analyze:bundles": "pnpm analyze:bundle:sdk && pnpm analyze:bundle:widget",
     "analyze:bundle:sdk": "vite build --config vite.sdk.analyze.config.mts",
     "analyze:bundle:widget": "vite build --config vite.widget.analyze.config.mts",

@@ -1,0 +1,91 @@
+/* Conversation thread, closer to a WhatsApp chat. Header actions stay as they are. */
+
+.takehk-chat-canvas {
+  .collapsed > header {
+    padding: 0.4rem 0.7rem;
+    gap: 0.35rem;
+  }
+
+  .conversation--container {
+    background-color: #0b141a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' fill='none' stroke='rgba(255,255,255,0.045)' stroke-width='1.2'%3E%3Ccircle cx='18' cy='22' r='7'/%3E%3Cpath d='M62 16h18v12H62z'/%3E%3Cpath d='M128 28l9 14h-18z'/%3E%3Ccircle cx='36' cy='96' r='6'/%3E%3Cpath d='M96 88h22v12H96z'/%3E%3Cpath d='M140 108q10-14 18 0'/%3E%3C/svg%3E");
+  }
+
+  .conversation-wrap {
+    padding-top: 0.4rem !important;
+  }
+
+  .conversation-wrap .chat-bubble {
+    box-shadow: none;
+    border-radius: 8px;
+    padding: 0.32rem 0.5rem 0.22rem 0.62rem;
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .conversation-wrap .chat-bubble.user {
+    background: #005c4b !important;
+    color: #e9edef !important;
+    border-bottom-right-radius: 2px;
+    border-bottom-left-radius: 8px;
+  }
+
+  .conversation-wrap .chat-bubble.agent:not(.card-message) {
+    background: #202c33 !important;
+    color: #e9edef !important;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 8px;
+  }
+
+  .conversation-wrap .chat-bubble.has-attachment.agent .file,
+  .conversation-wrap .chat-bubble.has-attachment.agent .icon-wrap {
+    color: #e9edef !important;
+  }
+
+  .conversation-wrap .chat-bubble .message-content,
+  .conversation-wrap .chat-bubble .message-content p {
+    color: #e9edef;
+    margin-bottom: 0;
+  }
+
+  .conversation-wrap .chat-bubble a,
+  .conversation-wrap .chat-bubble .link {
+    color: #53bdeb;
+  }
+
+  .conversation-wrap .wa-time,
+  .conversation-wrap .chat-bubble .time {
+    float: inline-end;
+    margin-inline-start: 0.7rem;
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    line-height: 1;
+    color: rgba(233, 237, 239, 0.62);
+    white-space: nowrap;
+    position: relative;
+    top: 0.28rem;
+  }
+
+  .conversation-wrap .messages-wrap > div:first-child {
+    height: auto !important;
+    line-height: 1.2 !important;
+    width: fit-content;
+    margin: 0.35rem auto 0.4rem;
+    padding: 0.28rem 0.65rem;
+    border-radius: 8px;
+    background: #182229;
+    color: #8696a0 !important;
+    font-size: 0.75rem;
+
+    &::before,
+    &::after {
+      display: none !important;
+    }
+  }
+
+  .conversation-wrap .agent-name {
+    color: #8696a0 !important;
+    margin-top: 0.15rem;
+    margin-bottom: 0;
+  }
+}

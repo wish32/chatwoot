@@ -73,10 +73,9 @@ const generateImage = async () => {
 
     const finalCanvas = document.createElement('canvas');
     const borderSize = 20;
-    const bottomPadding = 50;
 
     finalCanvas.width = img.width + borderSize * 2;
-    finalCanvas.height = img.height + borderSize * 2 + bottomPadding;
+    finalCanvas.height = img.height + borderSize * 2;
 
     const ctx = finalCanvas.getContext('2d');
 
@@ -84,28 +83,6 @@ const generateImage = async () => {
     ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
 
     ctx.drawImage(img, borderSize, borderSize);
-
-    ctx.fillStyle = '#1f2d3d';
-    ctx.font = 'normal 16px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(
-      t('YEAR_IN_REVIEW.SHARE_MODAL.BRANDING'),
-      borderSize,
-      img.height + borderSize + 35
-    );
-
-    const logo = new Image();
-    logo.src = '/brand-assets/logo.svg';
-    await new Promise(resolve => {
-      logo.onload = resolve;
-    });
-
-    const logoHeight = 30;
-    const logoWidth = (logo.width / logo.height) * logoHeight;
-    const logoX = finalCanvas.width - borderSize - logoWidth;
-    const logoY = img.height + borderSize + 15;
-
-    ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
 
     shareImageUrl.value = finalCanvas.toDataURL('image/png');
   } catch (err) {

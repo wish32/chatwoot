@@ -13,6 +13,10 @@ export default {
       type: String,
       default: '',
     },
+    readableTime: {
+      type: String,
+      default: '',
+    },
   },
   setup() {
     const { formatMessage } = useMessageFormatter();
@@ -30,10 +34,15 @@ export default {
 
 <template>
   <div
-    v-dompurify-html="formatMessage(message, false)"
     class="chat-bubble user"
     :style="{ background: widgetColor, color: textColor }"
-  />
+  >
+    <div
+      v-dompurify-html="formatMessage(message, false)"
+      class="message-content"
+    />
+    <span v-if="readableTime" class="wa-time">{{ readableTime }}</span>
+  </div>
 </template>
 
 <style lang="scss" scoped>

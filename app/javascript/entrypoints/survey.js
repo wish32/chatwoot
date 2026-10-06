@@ -5,11 +5,12 @@ import store from '../survey/store';
 import i18nMessages from '../survey/i18n';
 import App from '../survey/App.vue';
 import { domPurifyConfig } from '../shared/helpers/HTMLSanitizer';
+import { replaceBrandInMessages } from 'shared/helpers/productBrand';
 
 const app = createApp(App);
 const i18n = createI18n({
   locale: 'en',
-  messages: i18nMessages,
+  messages: replaceBrandInMessages(i18nMessages),
 });
 
 app.use(i18n);

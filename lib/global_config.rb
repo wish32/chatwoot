@@ -2,6 +2,8 @@ class GlobalConfig
   VERSION = 'V1'.freeze
   KEY_PREFIX = 'GLOBAL_CONFIG'.freeze
   DEFAULT_EXPIRY = 1.day
+  PRODUCT_NAME = 'TakeHK'
+  BRAND_NAME_KEYS = %w[INSTALLATION_NAME BRAND_NAME].freeze
 
   class << self
     def get(*args)
@@ -9,7 +11,7 @@ class GlobalConfig
       config = {}
 
       config_keys.each do |config_key|
-        config[config_key] = load_from_cache(config_key)
+        config[config_key] = brand_display_value(config_key, load_from_cache(config_key))
       end
 
       typecast_config(config)
@@ -17,7 +19,7 @@ class GlobalConfig
     end
 
     def get_value(arg)
-      load_from_cache(arg)
+      brand_display_value(arg, load_from_cache(arg))
     end
 
     def clear_cache
@@ -35,6 +37,15 @@ class GlobalConfig
         config_type = general_configs.find { |c| c['name'] == config_key }&.dig('type')
         config[config_key] = ActiveRecord::Type::Boolean.new.cast(config_value) if config_type == 'boolean'
       end
+    end
+
+    def brand_display_value(config_key, value)
+      return value unless BRAND_NAME_KEYS.include?(config_key.to_s)
+
+      raw = value.to_s.strip
+      return PRODUCT_NAME if raw.blank? || raw.casecmp('chatwoot').zero?
+
+      value
     end
 
     def load_from_cache(config_key)

@@ -4,7 +4,11 @@ set -x
 
 # Remove a potentially pre-existing server.pid for Rails.
 rm -rf /app/tmp/pids/server.pid
-rm -rf /app/tmp/cache/*
+# Wiping tmp/cache drops the Bootsnap index. On the Windows bind mount that
+# makes the next boot and the first page take minutes.
+if [ "$HKSS_DOCKER_DEV" != "true" ]; then
+  rm -rf /app/tmp/cache/*
+fi
 
 echo "Waiting for postgres to become ready...."
 
