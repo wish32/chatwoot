@@ -1,7 +1,7 @@
 /* Conversation thread. Warm paper in light mode, charcoal in dark mode. */
 
-$thd-wallpaper-light: url('../images/takehk-thread-mark-light.png');
-$thd-wallpaper-dark: url('../images/takehk-thread-mark-dark.png');
+$thd-wallpaper-light: url('widget/assets/images/takehk-thread-mark-light.png');
+$thd-wallpaper-dark: url('widget/assets/images/takehk-thread-mark-dark.png');
 
 .takehk-chat-canvas {
   --thd-canvas: #f3eee6;
