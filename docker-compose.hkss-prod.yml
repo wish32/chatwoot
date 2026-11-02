@@ -1,0 +1,94 @@
+# Production stack for this fork. Builds docker/Dockerfile from the custom branch.
+# Do not use docker-compose.production.yaml: that pulls the official image and drops local changes.
+# Postgres and Redis stay on the Docker network. Only Rails is published, and only on localhost.
+#
+# First boot, after .env exists:
+#   docker compose -f docker-compose.hkss-prod.yml build
+#   docker compose -f docker-compose.hkss-prod.yml up -d postgres redis
+#   docker compose -f docker-compose.hkss-prod.yml run --rm rails bundle exec rails db:chatwoot_prepare
+#   docker compose -f docker-compose.hkss-prod.yml up -d
+#
+# Later updates, from this directory:
+#   git pull --ff-only origin custom
+#   docker compose -f docker-compose.hkss-prod.yml build
+#   docker compose -f docker-compose.hkss-prod.yml run --rm rails bundle exec rails db:migrate
+#   docker compose -f docker-compose.hkss-prod.yml up -d
+# Never run `docker compose down -v`. That deletes the database and uploaded files.
+
+name: chatwoot-prod
+
+x-app: &app
+  image: chatwoot:hkss-prod
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  env_file: .env
+  environment:
+    NODE_ENV: production
+    RAILS_ENV: production
+    INSTALLATION_ENV: docker
+    RAILS_LOG_TO_STDOUT: "true"
+  volumes:
+    - chatwoot_storage:/app/storage
+  restart: unless-stopped
+
+services:
+  rails:
+    <<: *app
+    entrypoint: docker/entrypoints/rails.sh
+    command: ["bundle", "exec", "rails", "s", "-p", "3000", "-b", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "ruby", "-e", "require 'socket'; TCPSocket.new('127.0.0.1', 3000).close"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
+  sidekiq:
+    <<: *app
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatwoot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - chatwoot_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chatwoot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    env_file: .env
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$REDIS_PASSWORD\""]
+    volumes:
+      - chatwoot_redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  chatwoot_storage:
+  chatwoot_postgres:
+  chatwoot_redis:
