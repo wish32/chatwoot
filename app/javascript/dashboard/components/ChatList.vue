@@ -60,7 +60,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['conversationLoad']);
-const { uiSettings } = useUISettings();
+const { uiSettings, updateUISettings } = useUISettings();
 const { t } = useI18n();
 const router = useRouter();
 const store = useStore();
@@ -69,7 +69,10 @@ const { buildConversationListPath } = useConversationRoutePath();
 const resolveAttributesModalRef = ref(null);
 
 const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ME);
-const activeStatus = ref(wootConstants.STATUS_TYPE.OPEN);
+const activeStatus = ref(
+  wootConstants.DEFAULT_CONVERSATION_STATUS_FILTER ||
+    wootConstants.STATUS_TYPE.OPEN
+);
 const activeSortBy = ref(wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC);
 const showAdvancedFilters = ref(false);
 // chatsOnView is to store the chats that are currently visible on the screen,
@@ -372,15 +375,33 @@ const uniqueInboxes = computed(() => {
 });
 
 // ---------------------- Methods -----------------------
+function defaultConversationStatusFilter() {
+  return (
+    wootConstants.DEFAULT_CONVERSATION_STATUS_FILTER ||
+    wootConstants.STATUS_TYPE.OPEN
+  );
+}
+
 function setFiltersFromUISettings() {
   const { conversations_filter_by: filterBy = {} } = uiSettings.value;
   const { status, order_by: orderBy } = filterBy;
-  activeStatus.value = status || wootConstants.STATUS_TYPE.OPEN;
+  const defaultStatus = defaultConversationStatusFilter();
+  activeStatus.value = status || defaultStatus;
   activeSortBy.value = Object.values(wootConstants.SORT_BY_TYPE).includes(
     orderBy
   )
     ? orderBy
     : wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC;
+
+  // Persist TakeHK default once so refresh does not fall back to upstream "open".
+  if (!status && defaultStatus !== wootConstants.STATUS_TYPE.OPEN) {
+    updateUISettings({
+      conversations_filter_by: {
+        status: defaultStatus,
+        order_by: activeSortBy.value,
+      },
+    });
+  }
 }
 
 function emitConversationLoaded() {

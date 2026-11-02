@@ -16,6 +16,7 @@ import TextArea from 'next/textarea/TextArea.vue';
 import { sanitizeAllowedDomains } from 'dashboard/helper/URLHelper';
 import WhatsappBusinessManagementToken from './WhatsappBusinessManagementToken.vue';
 import HmacSecretKey from './components/HmacSecretKey.vue';
+import TakehkQuickActionsSection from './TakehkQuickActionsSection.vue';
 
 export default {
   components: {
@@ -28,6 +29,7 @@ export default {
     TextArea,
     WhatsappBusinessManagementToken,
     HmacSecretKey,
+    TakehkQuickActionsSection,
   },
   mixins: [inboxMixin],
   props: {
@@ -245,6 +247,7 @@ export default {
   </div>
   <div v-else-if="isAWebWidgetInbox">
     <div class="space-y-4">
+      <TakehkQuickActionsSection :inbox="inbox" />
       <SettingsToggleSection
         :header="$t('INBOX_MGMT.SETTINGS_POPUP.ALLOWED_DOMAINS.TITLE')"
         :description="
@@ -301,7 +304,7 @@ export default {
             <a
               target="_blank"
               rel="noopener noreferrer"
-              href="https://www.chatwoot.com/docs/product/channels/live-chat/sdk/identity-validation/"
+              href="https://takehk.com"
               class="text-n-blue-11 hover:underline text-label-small"
             >
               {{

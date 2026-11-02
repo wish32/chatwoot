@@ -17,7 +17,7 @@ class Api::V1::Widget::BaseController < ApplicationController
   end
 
   def conversation
-    @conversation ||= conversations.last
+    @conversation ||= conversations.where("additional_attributes ->> 'visitor_ended_at' IS NULL").last
   end
 
   def create_conversation
@@ -38,7 +38,7 @@ class Api::V1::Widget::BaseController < ApplicationController
         browser_language: browser.accept_language&.first&.code,
         browser: browser_params,
         initiated_at: timestamp_params,
-        referer: permitted_params[:message][:referer_url]
+        referer: permitted_params.dig(:message, :referer_url)
       },
       custom_attributes: permitted_params[:custom_attributes].presence || {}
     }
@@ -73,7 +73,7 @@ class Api::V1::Widget::BaseController < ApplicationController
   end
 
   def timestamp_params
-    { timestamp: permitted_params[:message][:timestamp] }
+    { timestamp: permitted_params.dig(:message, :timestamp) || Time.current.to_s }
   end
 
   def message_params

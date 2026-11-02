@@ -44,10 +44,14 @@ const ALLOWED_FILE_TYPES = {
 const isDownloading = ref(false);
 const activeAttachment = ref({});
 const activeFileType = ref('');
+const matchingAttachmentIndex = props.allAttachments.findIndex(attachment => {
+  if (props.attachment.id && attachment.id) {
+    return attachment.id === props.attachment.id;
+  }
+  return attachment.message_id === props.attachment.message_id;
+});
 const activeImageIndex = ref(
-  props.allAttachments.findIndex(
-    attachment => attachment.message_id === props.attachment.message_id
-  ) || 0
+  matchingAttachmentIndex >= 0 ? matchingAttachmentIndex : 0
 );
 
 const imageRef = useTemplateRef('imageRef');
@@ -101,14 +105,6 @@ const senderDetails = computed(() => {
     name: currentUser.value?.id === id ? 'You' : name || availableName || '',
     avatar: thumbnail || avatar_url || '',
   };
-});
-
-const fileNameFromDataUrl = computed(() => {
-  const { data_url: dataUrl } = activeAttachment.value;
-  if (!dataUrl) return '';
-
-  const fileName = dataUrl.split('/').pop();
-  return fileName ? decodeURIComponent(fileName) : '';
 });
 
 const onClose = () => emit('close');
@@ -187,8 +183,8 @@ onMounted(() => {
           @click.stop
         >
           <div
-            v-if="senderDetails"
-            class="flex items-center min-w-[15rem] shrink-0"
+            v-if="senderDetails.name || senderDetails.avatar"
+            class="flex items-center min-w-0 shrink"
           >
             <Avatar
               v-if="senderDetails.avatar"
@@ -214,11 +210,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <div
-            class="flex-1 mx-2 px-2 truncate text-sm font-medium text-center text-n-slate-12"
-          >
-            <span v-dompurify-html="fileNameFromDataUrl" class="truncate" />
-          </div>
+          <div class="flex-1" />
 
           <div class="flex items-center gap-2 ms-2 shrink-0">
             <NextButton
@@ -350,13 +342,35 @@ onMounted(() => {
         </main>
 
         <footer
-          class="z-10 flex items-center justify-center h-12 border-t border-n-weak"
+          v-if="hasMoreThanOneAttachment"
+          class="z-10 flex items-center justify-center gap-2 min-h-16 px-4 py-2 border-t border-n-weak overflow-x-auto"
+          @click.stop
         >
-          <div
-            class="rounded-md flex items-center justify-center px-3 py-1 bg-n-slate-3 text-n-slate-12 text-sm font-medium"
+          <button
+            v-for="(item, index) in allAttachments"
+            :key="item.id || item.message_id || index"
+            type="button"
+            class="shrink-0 size-12 p-0 overflow-hidden rounded-md border-2 bg-n-slate-3"
+            :class="
+              index === activeImageIndex
+                ? 'border-n-slate-12'
+                : 'border-transparent'
+            "
+            @click="onClickChangeAttachment(item, index)"
           >
-            {{ `${activeImageIndex + 1} / ${allAttachments.length}` }}
-          </div>
+            <img
+              v-if="item.file_type === 'image' || item.thumb_url"
+              :src="item.thumb_url || item.data_url"
+              alt=""
+              class="size-full object-cover"
+            />
+            <span
+              v-else
+              class="flex size-full items-center justify-center text-xs text-n-slate-12"
+            >
+              {{ index + 1 }}
+            </span>
+          </button>
         </footer>
       </div>
     </woot-modal>

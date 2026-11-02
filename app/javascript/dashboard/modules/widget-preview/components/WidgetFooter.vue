@@ -4,6 +4,10 @@ import { useI18n } from 'vue-i18n';
 import ResizableTextArea from 'shared/components/ResizableTextArea.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
+import {
+  quickActionLabel,
+  resolveQuickActions,
+} from 'widget/helpers/takehkQuickActions';
 
 const props = defineProps({
   config: {
@@ -12,9 +16,19 @@ const props = defineProps({
   },
 });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const isInputFocused = ref(false);
+
+const quickActionChips = computed(() => {
+  const useChinese = String(locale.value || '')
+    .toLowerCase()
+    .startsWith('zh');
+  return resolveQuickActions(props.config.quickActions).map(action => ({
+    id: action.id,
+    label: quickActionLabel(action, useChinese),
+  }));
+});
 
 const getStatusText = computed(() => {
   return props.config.isOnline
@@ -57,24 +71,38 @@ const getStatusText = computed(() => {
         <FluentIcon icon="arrow-right" size="14" />
       </button>
     </div>
-    <div
-      v-else
-      class="flex items-center h-10 bg-white rounded-md dark:!bg-n-slate-3"
-      :class="{ 'ring-2 ring-n-brand dark:ring-n-brand': isInputFocused }"
-    >
-      <ResizableTextArea
-        id="chat-input"
-        :rows="1"
-        :placeholder="
-          $t('INBOX_MGMT.WIDGET_BUILDER.FOOTER.CHAT_INPUT_PLACEHOLDER')
-        "
-        class="flex-grow !bg-white border-0 outline-none !outline-0 border-none h-8 text-sm dark:!bg-n-slate-3 pb-0 !pt-1.5 resize-none px-3 !mb-0 focus:outline-none rounded-md"
-        @focus="isInputFocused = true"
-        @blur="isInputFocused = false"
-      />
-      <div class="flex items-center gap-2 px-2">
-        <FluentIcon icon="emoji" />
-        <FluentIcon class="icon-send" icon="send" />
+    <div v-else class="flex flex-col gap-2">
+      <div
+        v-if="quickActionChips.length"
+        class="flex gap-2 overflow-x-auto"
+        role="toolbar"
+      >
+        <span
+          v-for="chip in quickActionChips"
+          :key="chip.id"
+          class="shrink-0 rounded-full border border-n-weak bg-white px-3 py-1 text-xs font-medium text-n-slate-12 dark:bg-n-slate-3"
+        >
+          {{ chip.label }}
+        </span>
+      </div>
+      <div
+        class="flex items-center h-10 bg-white rounded-md dark:!bg-n-slate-3"
+        :class="{ 'ring-2 ring-n-brand dark:ring-n-brand': isInputFocused }"
+      >
+        <ResizableTextArea
+          id="chat-input"
+          :rows="1"
+          :placeholder="
+            $t('INBOX_MGMT.WIDGET_BUILDER.FOOTER.CHAT_INPUT_PLACEHOLDER')
+          "
+          class="flex-grow !bg-white border-0 outline-none !outline-0 border-none h-8 text-sm dark:!bg-n-slate-3 pb-0 !pt-1.5 resize-none px-3 !mb-0 focus:outline-none rounded-md"
+          @focus="isInputFocused = true"
+          @blur="isInputFocused = false"
+        />
+        <div class="flex items-center gap-2 px-2">
+          <FluentIcon icon="emoji" />
+          <FluentIcon class="icon-send" icon="send" />
+        </div>
       </div>
     </div>
   </div>

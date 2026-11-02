@@ -118,7 +118,7 @@
         },
         "CHANNEL_GREETING_TOGGLE": {
           "LABEL": "开启频道问候功能",
-          "HELP_TEXT": "当客户开始对话并发送第一条消息时，自动发送问候消息。",
+          "HELP_TEXT": "用户打开对话时，自动发送问候消息。",
           "ENABLED": "已启用",
           "DISABLED": "已禁用"
         },
@@ -993,6 +993,34 @@
         "LABEL": "Enable widget in mobile apps",
         "SUBTITLE": "Check this if you embed the widget in iOS or Android apps. Mobile apps don't send domain information, so they would be blocked by domain restrictions unless this is enabled."
       },
+      "QUICK_ACTIONS": {
+        "TITLE": "Widget 快捷按钮",
+        "DESCRIPTION": "这些按钮显示在输入框上方。访客点击后，会把对应消息作为客户消息发出。浏览器语言为中文时使用中文标签和消息，其他语言使用英文。没有按钮时不显示这一栏。",
+        "ADD": "添加按钮",
+        "REMOVE": "删除",
+        "ID": "ID",
+        "ID_PLACEHOLDER": "incorporate",
+        "LABEL_ZH": "中文标签",
+        "LABEL_ZH_PLACEHOLDER": "註冊公司",
+        "LABEL_EN": "英文标签",
+        "LABEL_EN_PLACEHOLDER": "Incorporate",
+        "MESSAGE_ZH": "中文消息",
+        "MESSAGE_ZH_PLACEHOLDER": "我想註冊香港公司",
+        "MESSAGE_EN": "英文消息",
+        "MESSAGE_EN_PLACEHOLDER": "I want to incorporate a Hong Kong company",
+        "MESSAGE_HINT": "可留空。留空时，点击后发送对应语言的标签。",
+        "EMPTY": "还没有快捷按钮。访客端不会显示这一栏。",
+        "LIMIT": "最多 8 个按钮。",
+        "ERRORS": {
+          "ID_REQUIRED": "请填写唯一 ID。",
+          "ID_FORMAT": "ID 只能使用字母、数字、连字符或下划线。",
+          "ID_DUPLICATE": "这个 ID 已经用过。",
+          "LABEL_REQUIRED": "请至少填写中文或英文标签。",
+          "LABEL_TOO_LONG": "标签不能超过 120 个字符。",
+          "MESSAGE_TOO_LONG": "消息不能超过 1000 个字符。",
+          "LIMIT": "最多保存 8 个按钮。"
+        }
+      },
       "IDENTITY_VALIDATION": {
         "TITLE": "Identity Validation",
         "DESCRIPTION": "Verify user authenticity by generating secure tokens. This prevents unauthorized users from impersonating others in your chat.",
@@ -1006,6 +1034,8 @@
       "AGENT_ASSIGNMENT": "对话分配",
       "AGENT_ASSIGNMENT_SUB_TEXT": "更新对话分配设置",
       "UPDATE": "更新",
+      "DIRECT_CONVERSATION": "直接进入对话框？",
+      "DIRECT_CONVERSATION_SUB_TEXT": "打开后直接进入对话，客服不在线也可以留言。需要填表时仍会先填表。打招呼、未读消息和活动消息维持原样。若已连接帮助中心，对话中的返回仍可看到文章。",
       "ENABLE_EMAIL_COLLECT_BOX": "启用电子邮件收集框",
       "ENABLE_EMAIL_COLLECT_BOX_SUB_TEXT": "在新对话中启用或禁用电子邮件收集框",
       "AUTO_ASSIGNMENT": "启用自动分配",
@@ -1480,8 +1510,8 @@
         "USER_MESSAGE": "嗨",
         "AGENT_MESSAGE": "您好"
       },
-      "BRANDING_TEXT": "由 Chatwoot 支持",
-      "SCRIPT_SETTINGS": "\n      window.chatwootSettings = {options};"
+      "BRANDING_TEXT": "由 TakeHK 支持",
+      "SCRIPT_SETTINGS": "\n      window.takehkSettings = {options};"
     },
     "EMAIL_PROVIDERS": {
       "MICROSOFT": {

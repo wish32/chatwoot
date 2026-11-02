@@ -11,7 +11,8 @@ export default {
       groupedMessages: 'conversation/getGroupedConversation',
     }),
   },
-  mounted() {
+  async mounted() {
+    await this.$store.dispatch('conversation/ensureGreetingOnOpen');
     this.$store.dispatch('conversation/setUserLastSeen');
   },
 };

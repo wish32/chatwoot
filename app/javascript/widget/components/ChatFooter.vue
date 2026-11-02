@@ -4,6 +4,8 @@ import { getContrastingTextColor } from '@chatwoot/utils';
 import CustomButton from 'shared/components/Button.vue';
 import FooterReplyTo from 'widget/components/FooterReplyTo.vue';
 import ChatInputWrap from 'widget/components/ChatInputWrap.vue';
+import QuickActionBar from 'widget/components/QuickActionBar.vue';
+import { visitorHasOpenedTopic } from 'widget/helpers/takehkQuickActions';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import { sendEmailTranscript } from 'widget/api/conversation';
 import { useRouter } from 'vue-router';
@@ -18,6 +20,7 @@ export default {
     ChatInputWrap,
     CustomButton,
     FooterReplyTo,
+    QuickActionBar,
   },
   setup() {
     const router = useRouter();
@@ -36,6 +39,7 @@ export default {
       conversationAttributes: 'conversationAttributes/getConversationParams',
       widgetColor: 'appConfig/getWidgetColor',
       conversationSize: 'conversation/getConversationSize',
+      conversationMessages: 'conversation/getConversation',
       currentUser: 'contacts/getCurrentUser',
       isWidgetStyleFlat: 'appConfig/isWidgetStyleFlat',
     }),
@@ -57,6 +61,19 @@ export default {
       return (
         this.inReplyTo && (this.inReplyTo.content || this.inReplyTo.attachments)
       );
+    },
+    quickActions() {
+      const fromConfig = this.$store.state.appConfig?.takehkQuickActions;
+      if (Array.isArray(fromConfig) && fromConfig.length) return fromConfig;
+      const channel = window.chatwootWebChannel || {};
+      return Array.isArray(channel.takehkQuickActions)
+        ? channel.takehkQuickActions
+        : [];
+    },
+    showQuickActions() {
+      if (this.hasReplyTo || !this.quickActions.length) return false;
+      const messages = Object.values(this.conversationMessages || {});
+      return !visitorHasOpenedTopic(messages);
     },
   },
   mounted() {
@@ -80,9 +97,10 @@ export default {
         this.getAttributes();
       }
     },
-    async handleSendAttachment(attachment) {
+    async handleSendAttachment(payload) {
+      const attachments = payload.files || [payload];
       await this.sendAttachment({
-        attachment,
+        attachments,
         replyTo: this.inReplyTo ? this.inReplyTo.id : null,
       });
       this.inReplyTo = null;
@@ -147,6 +165,11 @@ export default {
       v-if="hasReplyTo"
       :in-reply-to="inReplyTo"
       @dismiss="inReplyTo = null"
+    />
+    <QuickActionBar
+      v-if="showQuickActions"
+      :actions="quickActions"
+      :on-pick="handleSendMessage"
     />
     <ChatInputWrap
       class="shadow-sm"

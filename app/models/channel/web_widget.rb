@@ -5,12 +5,14 @@
 #  id                    :integer          not null, primary key
 #  allowed_domains       :text             default("")
 #  continuity_via_email  :boolean          default(TRUE), not null
-#  feature_flags         :integer          default(7), not null
+#  direct_conversation   :boolean          default(TRUE), not null
+#  feature_flags         :integer          default(15), not null
 #  hmac_mandatory        :boolean          default(FALSE)
 #  hmac_token            :string
 #  pre_chat_form_enabled :boolean          default(FALSE)
 #  pre_chat_form_options :jsonb
 #  reply_time            :integer          default("in_a_few_minutes")
+#  takehk_quick_actions  :jsonb            not null
 #  website_token         :string
 #  website_url           :string
 #  welcome_tagline       :string
@@ -32,14 +34,17 @@ class Channel::WebWidget < ApplicationRecord
 
   self.table_name = 'channel_web_widgets'
   EDITABLE_ATTRS = [:website_url, :widget_color, :welcome_title, :welcome_tagline, :reply_time, :pre_chat_form_enabled,
-                    :continuity_via_email, :hmac_mandatory, :allowed_domains,
+                    :continuity_via_email, :direct_conversation, :hmac_mandatory, :allowed_domains,
+                    { takehk_quick_actions: [:id, :label_zh, :label_en, :message_zh, :message_en] },
                     { pre_chat_form_options: [:pre_chat_message, :require_email,
                                               { pre_chat_fields:
                                                 [:field_type, :label, :placeholder, :name, :enabled, :type, :enabled, :required,
                                                  :locale, { values: [] }, :regex_pattern, :regex_cue] }] },
                     { selected_feature_flags: [] }].freeze
 
-  before_validation :validate_pre_chat_options
+  before_validation :assign_default_takehk_quick_actions, on: :create
+  before_validation :validate_pre_chat_options, :prepare_takehk_quick_actions
+  validate :validate_takehk_quick_actions
   validates :website_url, presence: true
   validates :widget_color, presence: true
   has_many :portals, foreign_key: 'channel_web_widget_id', dependent: :nullify, inverse_of: :channel_web_widget
@@ -71,7 +76,7 @@ class Channel::WebWidget < ApplicationRecord
         g.async = true;
         s.parentNode.insertBefore(g,s);
         g.onload=function(){
-          window.chatwootSDK.run({
+          window.TakeHK.run({
             websiteToken: '#{website_token}',
             baseUrl: BASE_URL
           })
@@ -79,6 +84,24 @@ class Channel::WebWidget < ApplicationRecord
       })(document,\"script\");
     </script>
     "
+  end
+
+  def assign_default_takehk_quick_actions
+    return if takehk_quick_actions.present?
+
+    self.takehk_quick_actions = Takehk::WebWidgetQuickActions.default_actions
+  end
+
+  def prepare_takehk_quick_actions
+    return unless will_save_change_to_takehk_quick_actions?
+
+    self.takehk_quick_actions = Takehk::WebWidgetQuickActions.normalize(takehk_quick_actions)
+  end
+
+  def validate_takehk_quick_actions
+    return unless will_save_change_to_takehk_quick_actions?
+
+    Takehk::WebWidgetQuickActions.validate!(self)
   end
 
   def validate_pre_chat_options

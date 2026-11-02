@@ -13,6 +13,13 @@
 
 name: chatwoot-dev
 
+# Run the entrypoint from a pipe so a CRLF copy of rails.sh still starts.
+x-rails-entrypoint: &rails-entrypoint
+  - sh
+  - -c
+  - tr -d "$$(printf '\r')" < docker/entrypoints/rails.sh | sh -s -- "$$@"
+  - sh
+
 services:
   rails:
     build:
@@ -36,12 +43,15 @@ services:
       - ./:/app
       - dev_node_modules:/app/node_modules
       - chatwoot_storage:/app/storage
+      - rails_tmp:/app/tmp
     ports:
       - "127.0.0.1:3000:3000"
     extra_hosts:
-      - "partner.take.com:host-gateway"
+      # host-gateway also publishes an IPv6 address. Ruby tries that first and
+      # cannot open port 80, so the Desk webhook never leaves the container.
+      - "partner.take.com:192.168.65.254"
       - "host.docker.internal:host-gateway"
-    entrypoint: docker/entrypoints/rails.sh
+    entrypoint: *rails-entrypoint
     command: ["sh", "docker/entrypoints/hkss-dev.sh"]
     healthcheck:
       test: ["CMD", "ruby", "-e", "require 'socket'; TCPSocket.new('127.0.0.1', 3000).close"]
@@ -70,9 +80,10 @@ services:
       - ./:/app
       - dev_node_modules:/app/node_modules
       - chatwoot_storage:/app/storage
+      - rails_tmp:/app/tmp
     extra_hosts:
-      - "partner.take.com:host-gateway"
-    entrypoint: docker/entrypoints/rails.sh
+      - "partner.take.com:192.168.65.254"
+    entrypoint: *rails-entrypoint
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
     depends_on:
       rails:
@@ -87,6 +98,7 @@ networks:
 
 volumes:
   dev_node_modules:
+  rails_tmp:
   chatwoot_storage:
     name: docker_chatwoot_storage
     external: true

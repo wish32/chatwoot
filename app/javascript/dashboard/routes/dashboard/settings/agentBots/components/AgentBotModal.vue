@@ -14,6 +14,10 @@ import Input from 'dashboard/components-next/input/Input.vue';
 import TextArea from 'dashboard/components-next/textarea/TextArea.vue';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import AccessToken from 'dashboard/routes/dashboard/settings/profile/AccessToken.vue';
+import {
+  isTakehkManagedBot,
+  takehkWebhookUrl,
+} from 'dashboard/helper/takehkManagedAgentBot';
 
 const props = defineProps({
   type: {
@@ -49,27 +53,32 @@ const [showAccessToken, toggleAccessToken] = useToggle();
 const accessToken = ref('');
 const botSecret = ref('');
 
-const v$ = useVuelidate(
-  {
-    botName: {
-      required: helpers.withMessage(
-        () => t('AGENT_BOTS.FORM.ERRORS.NAME'),
-        required
-      ),
-    },
-    botUrl: {
-      required: helpers.withMessage(
-        () => t('AGENT_BOTS.FORM.ERRORS.URL'),
-        required
-      ),
-      url: helpers.withMessage(
-        () => t('AGENT_BOTS.FORM.ERRORS.VALID_URL'),
-        url
-      ),
-    },
-  },
-  formState
+const isTakehkManaged = computed(() =>
+  isTakehkManagedBot(props.selectedBot)
 );
+
+const rules = computed(() => ({
+  botName: {
+    required: helpers.withMessage(
+      () => t('AGENT_BOTS.FORM.ERRORS.NAME'),
+      required
+    ),
+  },
+  botUrl: isTakehkManaged.value
+    ? {}
+    : {
+        required: helpers.withMessage(
+          () => t('AGENT_BOTS.FORM.ERRORS.URL'),
+          required
+        ),
+        url: helpers.withMessage(
+          () => t('AGENT_BOTS.FORM.ERRORS.VALID_URL'),
+          url
+        ),
+      },
+}));
+
+const v$ = useVuelidate(rules, formState);
 
 const isLoading = computed(() =>
   props.type === MODAL_TYPES.CREATE
@@ -158,10 +167,10 @@ const handleSubmit = async () => {
   const botData = {
     name: formState.botName,
     description: formState.botDescription,
-    outgoing_url: formState.botUrl,
     bot_type: 'webhook',
     avatar: formState.botAvatar,
   };
+  if (!isTakehkManaged.value) botData.outgoing_url = formState.botUrl;
 
   const isCreate = props.type === MODAL_TYPES.CREATE;
 
@@ -206,7 +215,7 @@ const handleSubmit = async () => {
     const errorKey = isCreate
       ? t('AGENT_BOTS.ADD.API.ERROR_MESSAGE')
       : t('AGENT_BOTS.EDIT.API.ERROR_MESSAGE');
-    useAlert(errorKey);
+    useAlert(error?.message || errorKey);
   }
 };
 
@@ -223,7 +232,9 @@ const initializeForm = () => {
     } = props.selectedBot;
     formState.botName = name || '';
     formState.botDescription = description || '';
-    formState.botUrl = botUrl || botConfig?.webhook_url || '';
+    formState.botUrl = isTakehkManagedBot(props.selectedBot)
+      ? takehkWebhookUrl(props.selectedBot)
+      : botUrl || botConfig?.webhook_url || '';
     formState.botAvatarUrl = thumbnail || '';
 
     if (props.type === MODAL_TYPES.EDIT) {
@@ -335,6 +346,10 @@ defineExpose({ dialogRef });
           :placeholder="$t('AGENT_BOTS.FORM.DESCRIPTION.PLACEHOLDER')"
         />
 
+        <p v-if="isTakehkManaged" class="text-sm text-n-slate-11">
+          {{ $t('AGENT_BOTS.TAKEHK.DESCRIPTION') }}
+        </p>
+
         <Input
           id="bot-url"
           v-model="formState.botUrl"
@@ -342,6 +357,7 @@ defineExpose({ dialogRef });
           :placeholder="$t('AGENT_BOTS.FORM.WEBHOOK_URL.PLACEHOLDER')"
           :message="botUrlError"
           :message-type="botUrlError ? 'error' : 'info'"
+          :disabled="isTakehkManaged"
           @blur="v$.botUrl.$touch()"
         />
       </div>

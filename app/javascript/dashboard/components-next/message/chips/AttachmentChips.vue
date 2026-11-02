@@ -1,10 +1,13 @@
 <script setup>
-import { computed, useAttrs } from 'vue';
+import { computed, ref, useAttrs } from 'vue';
 
 import ImageChip from 'next/message/chips/Image.vue';
 import VideoChip from 'next/message/chips/Video.vue';
 import AudioChip from 'next/message/chips/Audio.vue';
 import FileChip from 'next/message/chips/File.vue';
+import GalleryView from 'dashboard/components/widgets/conversation/components/GalleryView.vue';
+import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
+import { attachmentGridColumns } from 'shared/helpers/takehkAttachmentGrid';
 import { useMessageContext } from '../provider.js';
 
 import { ATTACHMENT_TYPES } from '../constants';
@@ -35,6 +38,8 @@ defineOptions({
 
 const attrs = useAttrs();
 const { orientation } = useMessageContext();
+const showGallery = ref(false);
+const activeImage = ref(null);
 
 const classToApply = computed(() => {
   const baseClasses = [attrs.class, 'flex', 'flex-wrap'];
@@ -50,17 +55,28 @@ const allAttachments = computed(() => {
   return Array.isArray(props.attachments) ? props.attachments : [];
 });
 
-const mediaAttachments = computed(() => {
-  const allowedTypes = [ATTACHMENT_TYPES.IMAGE, ATTACHMENT_TYPES.VIDEO];
-  const mediaTypes = allAttachments.value.filter(attachment =>
-    allowedTypes.includes(attachment.fileType)
-  );
+const images = computed(() =>
+  allAttachments.value.filter(
+    attachment => attachment.fileType === ATTACHMENT_TYPES.IMAGE
+  )
+);
 
-  return mediaTypes.sort(
-    (a, b) =>
-      allowedTypes.indexOf(a.fileType) - allowedTypes.indexOf(b.fileType)
-  );
-});
+const videos = computed(() =>
+  allAttachments.value.filter(
+    attachment => attachment.fileType === ATTACHMENT_TYPES.VIDEO
+  )
+);
+
+const imageGridClass = computed(() =>
+  attachmentGridColumns(images.value.length) === 2
+    ? 'grid-cols-2'
+    : 'grid-cols-3'
+);
+
+const openImage = image => {
+  activeImage.value = image;
+  showGallery.value = true;
+};
 
 const recordings = computed(() => {
   return allAttachments.value.filter(
@@ -76,17 +92,37 @@ const files = computed(() => {
 </script>
 
 <template>
-  <div v-if="mediaAttachments.length" :class="classToApply">
-    <template v-for="attachment in mediaAttachments" :key="attachment.id">
-      <ImageChip
-        v-if="attachment.fileType === ATTACHMENT_TYPES.IMAGE"
-        :attachment="attachment"
-      />
-      <VideoChip
-        v-else-if="attachment.fileType === ATTACHMENT_TYPES.VIDEO"
-        :attachment="attachment"
-      />
-    </template>
+  <div
+    v-if="images.length > 1"
+    class="grid gap-0.5 w-64 max-w-full overflow-hidden rounded-lg"
+    :class="imageGridClass"
+  >
+    <button
+      v-for="image in images"
+      :key="image.id"
+      type="button"
+      class="aspect-square p-0 border-0 overflow-hidden cursor-pointer"
+      @click="openImage(image)"
+    >
+      <img :src="image.dataUrl" alt="" class="size-full object-cover" />
+    </button>
+  </div>
+  <GalleryView
+    v-if="showGallery && activeImage"
+    v-model:show="showGallery"
+    :attachment="useSnakeCase(activeImage)"
+    :all-attachments="images.map(image => useSnakeCase(image))"
+    @close="showGallery = false"
+  />
+  <div v-if="images.length === 1" :class="classToApply">
+    <ImageChip :attachment="images[0]" />
+  </div>
+  <div v-if="videos.length" :class="classToApply">
+    <VideoChip
+      v-for="attachment in videos"
+      :key="attachment.id"
+      :attachment="attachment"
+    />
   </div>
   <div v-if="recordings.length" :class="classToApply">
     <div v-for="attachment in recordings" :key="attachment.id">

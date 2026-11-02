@@ -1,6 +1,11 @@
 import DOCK_CSS from '../hero-dock/hero-dock.css?inline';
 
-const DEFAULT_PHRASE = '我想要註冊香港公司...';
+const DEFAULT_PHRASES = [
+  '我要註冊香港/BVI公司...',
+  '我要會計審計安排服務...',
+  '請問...',
+];
+const DEFAULT_PHRASE = DEFAULT_PHRASES[0];
 const DEFAULT_TOPICS = [
   '我想註冊一間香港私人公司',
   '周年申報和 NAR1 可以一起辦嗎？',
@@ -82,10 +87,19 @@ function ensureCss() {
   document.head.appendChild(style);
 }
 
+function readBrandSettings() {
+  return (
+    window.takehkSettings || window.TakeHKSettings || window.chatwootSettings || {}
+  );
+}
+
 function hideNativeBubble() {
   document.documentElement.classList.add('takehk-chat-dock');
-  window.chatwootSettings = window.chatwootSettings || {};
-  window.chatwootSettings.hideMessageBubble = true;
+  const settings =
+    window.takehkSettings ||
+    window.TakeHKSettings ||
+    (window.chatwootSettings = window.chatwootSettings || {});
+  settings.hideMessageBubble = true;
   if (
     window.$chatwoot &&
     typeof window.$chatwoot.toggleBubbleVisibility === 'function'
@@ -191,7 +205,7 @@ function mountStream(stream, topics, reduced) {
 }
 
 function widgetSettings() {
-  const settings = window.chatwootSettings || {};
+  const settings = readBrandSettings();
   return {
     locale: settings.locale,
     position: settings.position === 'left' ? 'left' : 'right',
@@ -199,7 +213,7 @@ function widgetSettings() {
     showPopoutButton: !!settings.showPopoutButton,
     showUnreadMessagesDialog: settings.showUnreadMessagesDialog !== false,
     widgetStyle: settings.widgetStyle || 'standard',
-    darkMode: settings.darkMode || 'light',
+    darkMode: settings.darkMode || 'auto',
     welcomeTitle: settings.welcomeTitle || '',
     welcomeDescription: settings.welcomeDescription || '',
     availableMessage: settings.availableMessage || '',
@@ -211,7 +225,7 @@ function widgetSettings() {
   };
 }
 
-function createLiveChat(options, requestClose) {
+function createLiveChat(options, requestClose, onReady) {
   const baseUrl = String(options.baseUrl || '').replace(/\/$/, '');
   const websiteToken = options.websiteToken || '';
   const origin = safeOrigin(baseUrl);
@@ -266,6 +280,7 @@ function createLiveChat(options, requestClose) {
         referrerHost: window.location.host,
       });
       publishOpenState();
+      if (typeof onReady === 'function') onReady();
       return;
     }
 
@@ -309,28 +324,43 @@ function createLiveChat(options, requestClose) {
   };
 }
 
+function resolvePhrases(options) {
+  const listed = Array.isArray(options && options.phrases)
+    ? options.phrases.map(item => String(item || '').trim()).filter(Boolean)
+    : [];
+  if (listed.length) return listed;
+  const single = String((options && options.phrase) || '').trim();
+  if (single) return [single];
+  return DEFAULT_PHRASES.slice();
+}
+
 function mountDock(root, options) {
   const dock = root.querySelector('[data-thd-dock]');
   const typed = root.querySelector('[data-thd-typed]');
   const openBtn = root.querySelector('[data-thd-open]');
-  const closeBtn = root.querySelector('[data-thd-close]');
   const stage = root.querySelector('[data-thd-stage]');
   if (!dock || !typed || !openBtn || !stage) return { close() {} };
 
-  const phrase = options.phrase || DEFAULT_PHRASE;
+  const phrases = resolvePhrases(options);
   const reduced = !!options.reducedMotion;
   let timer = null;
   let index = 0;
+  let phraseIndex = 0;
   let deleting = false;
   let placeholder = null;
   let closing = false;
 
+  function currentPhrase() {
+    return phrases[phraseIndex] || phrases[0];
+  }
+
   function paintTyped(count) {
-    typed.textContent = phrase.slice(0, count);
+    typed.textContent = currentPhrase().slice(0, count);
   }
 
   function step() {
     if (dock.classList.contains('is-open')) return;
+    const phrase = currentPhrase();
     if (reduced) {
       paintTyped(phrase.length);
       return;
@@ -351,6 +381,7 @@ function mountDock(root, options) {
     if (index <= 0) {
       deleting = false;
       index = 0;
+      phraseIndex = (phraseIndex + 1) % phrases.length;
       timer = window.setTimeout(step, 460);
       return;
     }
@@ -402,12 +433,6 @@ function mountDock(root, options) {
       window.requestAnimationFrame(() => {
         dock.classList.add('is-open');
         place(viewport());
-        window.setTimeout(
-          () => {
-            if (closeBtn) closeBtn.focus();
-          },
-          reduced ? 0 : 460
-        );
         if (typeof options.onOpen === 'function') options.onOpen(stage);
       });
     });
@@ -458,7 +483,6 @@ function mountDock(root, options) {
   }
 
   openBtn.addEventListener('click', open);
-  if (closeBtn) closeBtn.addEventListener('click', close);
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && dock.classList.contains('is-open')) {
       event.preventDefault();
@@ -474,7 +498,7 @@ function mountDock(root, options) {
 }
 
 function render(target, options) {
-  const phrase = options.phrase || DEFAULT_PHRASE;
+  const phrase = resolvePhrases(options)[0];
   const watermark = options.watermark == null ? 'AI' : options.watermark;
   target.innerHTML = `<div class="thd-hero">
       <div class="thd-stream" data-thd-stream aria-hidden="true"></div>
@@ -484,8 +508,10 @@ function render(target, options) {
           <span data-thd-typed></span><span class="thd-caret"></span>
         </button>
         <div class="thd-stage" data-thd-stage inert>
-          <button type="button" class="thd-close" data-thd-close>關閉</button>
           <div class="thd-thread" data-thd-thread></div>
+        </div>
+        <div class="thd-loading" data-thd-loading>
+          <span class="thd-spinner" aria-hidden="true"></span>
         </div>
       </div>
     </div>`;
@@ -506,11 +532,17 @@ export function run(options) {
   mountStream(target.querySelector('[data-thd-stream]'), topics, reduced);
 
   let dockApi = { close() {} };
-  const widget = createLiveChat(settings, () => dockApi.close());
+  let widgetReady = false;
+  const dock = target.querySelector('[data-thd-dock]');
+  const widget = createLiveChat(settings, () => dockApi.close(), () => {
+    widgetReady = true;
+    if (dock) dock.classList.remove('is-loading');
+  });
   dockApi = mountDock(target, {
-    phrase: settings.phrase || DEFAULT_PHRASE,
+    phrases: resolvePhrases(settings),
     reducedMotion: reduced,
     onOpen(stage) {
+      if (!widgetReady && dock) dock.classList.add('is-loading');
       widget.mount(stage);
       widget.setOpen(true);
     },
@@ -518,4 +550,20 @@ export function run(options) {
       widget.setOpen(false);
     },
   });
+
+  const stage = target.querySelector('[data-thd-stage]');
+  const warmWidget = () => {
+    if (stage) widget.mount(stage);
+  };
+  const scheduleWarm = () => {
+    window.setTimeout(() => {
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(warmWidget, { timeout: 2000 });
+      } else {
+        warmWidget();
+      }
+    }, 1200);
+  };
+  if (document.readyState === 'complete') scheduleWarm();
+  else window.addEventListener('load', scheduleWarm, { once: true });
 }

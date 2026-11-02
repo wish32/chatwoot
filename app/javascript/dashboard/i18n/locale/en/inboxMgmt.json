@@ -118,7 +118,7 @@
         },
         "CHANNEL_GREETING_TOGGLE": {
           "LABEL": "Enable channel greeting",
-          "HELP_TEXT": "Auto-send greeting messages when customers start a conversation and send their first message.",
+          "HELP_TEXT": "Send the greeting automatically when a visitor opens the chat.",
           "ENABLED": "Enabled",
           "DISABLED": "Disabled"
         },
@@ -1091,6 +1091,34 @@
         "LABEL": "Enable widget in mobile apps",
         "SUBTITLE": "Check this if you embed the widget in iOS or Android apps. Mobile apps don't send domain information, so they would be blocked by domain restrictions unless this is enabled."
       },
+      "QUICK_ACTIONS": {
+        "TITLE": "Widget quick actions",
+        "DESCRIPTION": "These chips sit above the message box. A click sends the matching message as the visitor. Chinese browsers use the Chinese label and message. Other browsers use English. With no actions, the bar stays hidden.",
+        "ADD": "Add action",
+        "REMOVE": "Remove",
+        "ID": "ID",
+        "ID_PLACEHOLDER": "incorporate",
+        "LABEL_ZH": "Chinese label",
+        "LABEL_ZH_PLACEHOLDER": "註冊公司",
+        "LABEL_EN": "English label",
+        "LABEL_EN_PLACEHOLDER": "Incorporate",
+        "MESSAGE_ZH": "Chinese message",
+        "MESSAGE_ZH_PLACEHOLDER": "我想註冊香港公司",
+        "MESSAGE_EN": "English message",
+        "MESSAGE_EN_PLACEHOLDER": "I want to incorporate a Hong Kong company",
+        "MESSAGE_HINT": "Optional. An empty message sends the label in that language.",
+        "EMPTY": "No quick actions yet. Visitors will not see the bar.",
+        "LIMIT": "You can add up to 8 actions.",
+        "ERRORS": {
+          "ID_REQUIRED": "Enter a unique ID.",
+          "ID_FORMAT": "Use a slug made of letters, numbers, hyphens, or underscores.",
+          "ID_DUPLICATE": "This ID is already used.",
+          "LABEL_REQUIRED": "Add a Chinese or English label.",
+          "LABEL_TOO_LONG": "Labels must be 120 characters or fewer.",
+          "MESSAGE_TOO_LONG": "Messages must be 1000 characters or fewer.",
+          "LIMIT": "Save at most 8 actions."
+        }
+      },
       "IDENTITY_VALIDATION": {
         "TITLE": "Identity Validation",
         "DESCRIPTION": "Verify user authenticity by generating secure tokens. This prevents unauthorized users from impersonating others in your chat.",
@@ -1115,6 +1143,8 @@
       "AGENT_ASSIGNMENT": "Conversation Assignment",
       "AGENT_ASSIGNMENT_SUB_TEXT": "Update conversation assignment settings",
       "UPDATE": "Update",
+      "DIRECT_CONVERSATION": "Enter the conversation directly?",
+      "DIRECT_CONVERSATION_SUB_TEXT": "Visitors open the conversation immediately and can leave a message while the team is offline. A required pre-chat form still comes first. Greetings, unread messages, and campaigns stay in place. If a help center is linked, the back button still opens its articles.",
       "ENABLE_EMAIL_COLLECT_BOX": "Enable email collect box",
       "ENABLE_EMAIL_COLLECT_BOX_SUB_TEXT": "Enable or disable email collect box on new conversation",
       "AUTO_ASSIGNMENT": "Enable auto assignment",
@@ -1589,8 +1619,8 @@
         "USER_MESSAGE": "Hi",
         "AGENT_MESSAGE": "Hello"
       },
-      "BRANDING_TEXT": "Powered by Chatwoot",
-      "SCRIPT_SETTINGS": "\n      window.chatwootSettings = {options};"
+      "BRANDING_TEXT": "Powered by TakeHK",
+      "SCRIPT_SETTINGS": "\n      window.takehkSettings = {options};"
     },
     "EMAIL_PROVIDERS": {
       "MICROSOFT": {

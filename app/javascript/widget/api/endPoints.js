@@ -1,6 +1,20 @@
 import { buildSearchParamsWithLocale } from '../helpers/urlParamsHelper';
 import { generateEventParams } from './events';
 
+const openConversation = () => {
+  const referrerURL = window.referrerURL || '';
+  const search = buildSearchParamsWithLocale(window.location.search);
+  return {
+    url: `/api/v1/widget/conversations/open${search}`,
+    params: {
+      message: {
+        timestamp: new Date().toString(),
+        referer_url: referrerURL,
+      },
+    },
+  };
+};
+
 const createConversation = params => {
   const referrerURL = window.referrerURL || '';
   const search = buildSearchParamsWithLocale(window.location.search);
@@ -44,19 +58,21 @@ const sendMessage = (content, replyTo, { customAttributes, labels } = {}) => {
 };
 
 const sendAttachment = (
-  { attachment, replyTo = null },
+  { attachment, attachments, replyTo = null },
   { customAttributes, labels } = {}
 ) => {
   const { referrerURL = '' } = window;
   const timestamp = new Date().toString();
-  const { file } = attachment;
+  const files = attachments?.length ? attachments : [attachment];
 
   const formData = new FormData();
-  if (typeof file === 'string') {
-    formData.append('message[attachments][]', file);
-  } else {
-    formData.append('message[attachments][]', file, file.name);
-  }
+  files.forEach(({ file }) => {
+    if (typeof file === 'string') {
+      formData.append('message[attachments][]', file);
+    } else {
+      formData.append('message[attachments][]', file, file.name);
+    }
+  });
 
   formData.append('message[referer_url]', referrerURL);
   formData.append('message[timestamp]', timestamp);
@@ -126,6 +142,7 @@ const getMostReadArticles = (slug, locale) => ({
 });
 
 export default {
+  openConversation,
   createConversation,
   sendMessage,
   sendAttachment,

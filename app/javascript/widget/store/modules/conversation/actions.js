@@ -1,4 +1,5 @@
 import {
+  openConversationAPI,
   createConversationAPI,
   sendMessageAPI,
   getMessagesAPI,
@@ -6,14 +7,42 @@ import {
   toggleTyping,
   setUserLastSeenAt,
   toggleStatus,
+  recallMessageAPI,
   setCustomAttributes,
   deleteCustomAttribute,
 } from 'widget/api/conversation';
+import {
+  isHiddenMessage,
+  rememberHiddenMessage,
+  withoutHiddenMessages,
+} from 'widget/helpers/hiddenMessages';
 
 import { ON_CONVERSATION_CREATED } from 'widget/constants/widgetBusEvents';
 import { createTemporaryMessage, getNonDeletedMessages } from './helpers';
 import { emitter } from 'shared/helpers/mitt';
 export const actions = {
+  ensureGreetingOnOpen: async ({ commit, getters, state }) => {
+    if (state.uiFlags.greetingOnOpenDone) {
+      return;
+    }
+    if (getters.getMessageCount > 0) {
+      commit('setConversationUIFlag', { greetingOnOpenDone: true });
+      return;
+    }
+    commit('setConversationUIFlag', { isCreating: true });
+    try {
+      const { data } = await openConversationAPI();
+      const messages = data.messages || [];
+      messages.forEach(message => {
+        commit('pushMessageToConversation', message);
+      });
+      commit('setConversationUIFlag', { greetingOnOpenDone: true });
+    } catch (error) {
+      // Ignore — visitor can still send the first message manually.
+    } finally {
+      commit('setConversationUIFlag', { isCreating: false });
+    }
+  },
   createConversation: async ({ commit, dispatch }, params) => {
     commit('setConversationUIFlag', { isCreating: true });
     try {
@@ -48,8 +77,14 @@ export const actions = {
     const hasPendingMetadata =
       Object.keys(pendingCustomAttributes).length > 0 ||
       pendingLabels.length > 0;
+    // A retry still carries status "failed". Mark it in progress so the
+    // delivered copy replaces this bubble instead of leaving both on screen.
+    const outgoing =
+      message.status === 'failed'
+        ? { ...message, status: 'in_progress' }
+        : message;
 
-    commit('pushMessageToConversation', message);
+    commit('pushMessageToConversation', outgoing);
     commit('updateMessageMeta', { id, meta: { ...meta, error: '' } });
     try {
       const { data } = await sendMessageAPI(content, replyTo, {
@@ -62,9 +97,8 @@ export const actions = {
         commit('clearPendingConversationMetadata');
       }
 
-      // [VITE] Don't delete this manually, since `pushMessageToConversation` does the replacement for us anyway
-      // commit('deleteMessage', message.id);
       commit('pushMessageToConversation', { ...data, status: 'sent' });
+      if (data.id !== id) commit('deleteMessage', id);
     } catch (error) {
       commit('pushMessageToConversation', { ...message, status: 'failed' });
       commit('updateMessageMeta', {
@@ -79,18 +113,18 @@ export const actions = {
   },
 
   sendAttachment: async ({ commit, state: conversationState }, params) => {
-    const {
-      attachment: { thumbUrl, fileType },
-      meta = {},
-    } = params;
-    const attachment = {
+    const { meta = {} } = params;
+    const items = params.attachments?.length
+      ? params.attachments
+      : [params.attachment];
+    const attachments = items.map(({ thumbUrl, fileType }) => ({
       thumb_url: thumbUrl,
       data_url: thumbUrl,
       file_type: fileType,
       status: 'in_progress',
-    };
+    }));
     const tempMessage = createTemporaryMessage({
-      attachments: [attachment],
+      attachments,
       replyTo: params.replyTo,
     });
     const { pendingCustomAttributes, pendingLabels } = conversationState;
@@ -130,7 +164,9 @@ export const actions = {
         data: { payload, meta },
       } = await getMessagesAPI({ before });
       const { contact_last_seen_at: lastSeen } = meta;
-      const formattedMessages = getNonDeletedMessages({ messages: payload });
+      const formattedMessages = withoutHiddenMessages(
+        getNonDeletedMessages({ messages: payload })
+      );
       commit('conversation/setMetaUserLastSeenAt', lastSeen, { root: true });
       commit('setMessagesInConversation', formattedMessages);
       commit('setConversationListLoading', false);
@@ -148,7 +184,9 @@ export const actions = {
       } = await getMessagesAPI({ after: lastMessageId });
 
       const { contact_last_seen_at: lastSeen } = meta;
-      const formattedMessages = getNonDeletedMessages({ messages: payload });
+      const formattedMessages = withoutHiddenMessages(
+        getNonDeletedMessages({ messages: payload })
+      );
       const missingMessages = formattedMessages.filter(
         message => conversations?.[message.id] === undefined
       );
@@ -175,6 +213,7 @@ export const actions = {
 
   addOrUpdateMessage: async ({ commit }, data) => {
     const { id, content_attributes } = data;
+    if (isHiddenMessage(id)) return;
     if (content_attributes && content_attributes.deleted) {
       commit('deleteMessage', id);
       return;
@@ -208,8 +247,34 @@ export const actions = {
     }
   },
 
-  resolveConversation: async () => {
+  resolveConversation: async ({ commit, dispatch }) => {
     await toggleStatus();
+    commit('clearConversations');
+    dispatch(
+      'conversationAttributes/clearConversationAttributes',
+      null,
+      { root: true }
+    );
+  },
+
+  recallMessage: async ({ commit, state }, messageId) => {
+    await recallMessageAPI(messageId);
+    const current = state.conversations[messageId];
+    if (!current) return;
+    commit('pushMessageToConversation', {
+      ...current,
+      content: '',
+      attachments: [],
+      content_attributes: {
+        ...(current.content_attributes || {}),
+        recalled: true,
+      },
+    });
+  },
+
+  hideMessageLocally: ({ commit }, messageId) => {
+    rememberHiddenMessage(messageId);
+    commit('deleteMessage', messageId);
   },
 
   setCustomAttributes: async (

@@ -16,6 +16,19 @@ class Api::V1::Widget::ConversationsController < Api::V1::Widget::BaseController
     end
   end
 
+  # TakeHK: create empty conversation + channel greeting when widget opens (no visitor message yet).
+  def open
+    @conversation = conversation
+    if @conversation.nil?
+      ActiveRecord::Base.transaction do
+        @conversation = create_conversation
+      end
+    end
+
+    Takehk::WebWidgetGreetingOnOpenService.new(conversation: @conversation, inbox: inbox).perform
+    @conversation.reload
+  end
+
   def process_update_contact
     @contact = ContactIdentifyAction.new(
       contact: @contact,
@@ -57,10 +70,11 @@ class Api::V1::Widget::ConversationsController < Api::V1::Widget::BaseController
   def toggle_status
     return head :forbidden unless @web_widget.end_conversation?
 
-    unless conversation.resolved?
-      conversation.status = :resolved
-      conversation.save!
-    end
+    conversation.status = :resolved unless conversation.resolved?
+    conversation.additional_attributes = (conversation.additional_attributes || {}).merge(
+      'visitor_ended_at' => Time.current.iso8601
+    )
+    conversation.save!
     head :ok
   end
 

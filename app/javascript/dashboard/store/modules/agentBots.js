@@ -84,7 +84,9 @@ export const actions = {
       formData.append('name', data.name);
       formData.append('description', data.description);
       formData.append('bot_type', data.bot_type || 'webhook');
-      formData.append('outgoing_url', data.outgoing_url);
+      if (data.outgoing_url != null) {
+        formData.append('outgoing_url', data.outgoing_url);
+      }
 
       if (data.avatar) {
         formData.append('avatar', data.avatar);

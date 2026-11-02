@@ -23,6 +23,11 @@ import { useAvailability } from 'widget/composables/useAvailability';
 import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents';
 import { emitter } from 'shared/helpers/mitt';
 import { PRODUCT_COLOR } from 'shared/constants/productColor';
+import { readStoredTheme } from 'widget/helpers/threadTheme';
+import {
+  conversationEntryName,
+  isDirectConversationEnabled,
+} from 'widget/helpers/directConversation';
 
 export default {
   name: 'App',
@@ -41,6 +46,8 @@ export default {
     return {
       isMobile: false,
       campaignsSnoozedTill: undefined,
+      conversationsReady: false,
+      directEntryDone: false,
     };
   },
   computed: {
@@ -100,7 +107,10 @@ export default {
       this.registerListeners();
       this.sendLoadedEvent();
     } else {
-      this.fetchOldConversations();
+      this.fetchOldConversations().then(() => {
+        this.conversationsReady = true;
+        this.openDirectConversation();
+      });
       this.fetchAvailableAgents(websiteToken);
       this.setLocale(getLocale(window.location.search));
     }
@@ -278,9 +288,15 @@ export default {
         if (message.event === 'config-set') {
           this.setLocale(message.locale);
           this.setBubbleLabel();
-          this.fetchOldConversations().then(() => this.setUnreadView());
+          this.fetchOldConversations().then(() => {
+            this.conversationsReady = true;
+            this.setUnreadView();
+            this.openDirectConversation();
+          });
           this.fetchAvailableAgents(websiteToken);
           this.setAppConfig(message);
+          const storedTheme = readStoredTheme();
+          if (storedTheme) this.setColorScheme(storedTheme);
           this.$store.dispatch('contacts/get');
           this.setCampaignReadData(message.campaignsSnoozedTill);
         } else if (message.event === 'widget-visible') {
@@ -333,6 +349,7 @@ export default {
           this.$store.dispatch('appConfig/toggleWidgetOpen', message.isOpen);
 
           const shouldShowMessageView =
+            !isDirectConversationEnabled() &&
             ['home'].includes(this.$route.name) &&
             message.isOpen &&
             this.messageCount;
@@ -340,6 +357,11 @@ export default {
             !message.isOpen &&
             ['unread-messages', 'campaigns'].includes(this.$route.name);
 
+          if (message.isOpen) {
+            this.openDirectConversation();
+          } else {
+            this.directEntryDone = false;
+          }
           if (shouldShowMessageView) {
             this.router.replace({ name: 'messages' });
           }
@@ -366,6 +388,25 @@ export default {
       if (snoozedTill) {
         this.campaignsSnoozedTill = Number(snoozedTill);
       }
+    },
+    openDirectConversation() {
+      if (!isDirectConversationEnabled() || this.directEntryDone) return;
+      if (!this.conversationsReady) return;
+      if (this.isIFrame && !this.isWidgetOpen) return;
+      if (
+        ['unread-messages', 'campaigns', 'article-viewer'].includes(
+          this.$route.name
+        )
+      ) {
+        return;
+      }
+
+      const name = conversationEntryName(
+        this.conversationSize,
+        this.shouldShowPreChatForm
+      );
+      this.directEntryDone = true;
+      if (this.$route.name !== name) this.router.replace({ name });
     },
   },
 };

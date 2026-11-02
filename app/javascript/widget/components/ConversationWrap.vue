@@ -1,17 +1,15 @@
 <script>
+// TakeHK fork: no widget typing bubble (pending/ActionCable typing). Not configurable in Dashboard.
 import ChatMessage from 'widget/components/ChatMessage.vue';
-import AgentTypingBubble from 'widget/components/AgentTypingBubble.vue';
 import DateSeparator from 'shared/components/DateSeparator.vue';
 import Spinner from 'shared/components/Spinner.vue';
 import { useDarkMode } from 'widget/composables/useDarkMode';
-import { MESSAGE_TYPE } from 'shared/constants/messages';
 import { mapActions, mapGetters } from 'vuex';
 
 export default {
   name: 'ConversationWrap',
   components: {
     ChatMessage,
-    AgentTypingBubble,
     DateSeparator,
     Spinner,
   },
@@ -34,25 +32,12 @@ export default {
   computed: {
     ...mapGetters({
       earliestMessage: 'conversation/getEarliestMessage',
-      lastMessage: 'conversation/getLastMessage',
       allMessagesLoaded: 'conversation/getAllMessagesLoaded',
       isFetchingList: 'conversation/getIsFetchingList',
       conversationSize: 'conversation/getConversationSize',
-      isAgentTyping: 'conversation/getIsAgentTyping',
-      conversationAttributes: 'conversationAttributes/getConversationParams',
     }),
     colorSchemeClass() {
       return `${this.darkMode === 'dark' ? 'dark-scheme' : 'light-scheme'}`;
-    },
-    showStatusIndicator() {
-      const { status } = this.conversationAttributes;
-      const isConversationInPendingStatus = status === 'pending';
-      const isLastMessageIncoming =
-        this.lastMessage.message_type === MESSAGE_TYPE.INCOMING;
-      return (
-        this.isAgentTyping ||
-        (isConversationInPendingStatus && isLastMessageIncoming)
-      );
     },
   },
   watch: {
@@ -100,7 +85,7 @@ export default {
 
 <template>
   <div class="conversation--container" :class="colorSchemeClass">
-    <div class="conversation-wrap" :class="{ 'is-typing': isAgentTyping }">
+    <div class="conversation-wrap">
       <div v-if="isFetchingList" class="message--loader">
         <Spinner />
       </div>
@@ -116,7 +101,6 @@ export default {
           :message="message"
         />
       </div>
-      <AgentTypingBubble v-if="showStatusIndicator" />
     </div>
   </div>
 </template>

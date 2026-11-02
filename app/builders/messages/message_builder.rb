@@ -51,7 +51,7 @@ class Messages::MessageBuilder
   def process_attachments
     return if @attachments.blank?
 
-    @attachments.each do |uploaded_attachment|
+    Takehk::AttachmentBatch.limit(@attachments).each do |uploaded_attachment|
       attachment = @message.attachments.build(
         account_id: @message.account_id,
         file: uploaded_attachment

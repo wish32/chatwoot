@@ -107,6 +107,9 @@
       "CREATE": "创建机器人",
       "UPDATE": "更新机器人"
     },
+    "TAKEHK": {
+      "DESCRIPTION": "实际 AI 由账户 Webhook TakeHK Desk AI 处理，此 Bot 仅作会话指派与接手 UI。"
+    },
     "WEBHOOK": {
       "DESCRIPTION": "配置Webhook 机器人与您的自定义服务集成。机器人将接收和处理会话中的事件，并且能够响应这些事件。"
     },

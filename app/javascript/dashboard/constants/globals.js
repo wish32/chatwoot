@@ -12,6 +12,8 @@ export default {
     SNOOZED: 'snoozed',
     ALL: 'all',
   },
+  // TakeHK: Website AI keeps new threads in pending (AgentBot). Open-only default hides the inbox.
+  DEFAULT_CONVERSATION_STATUS_FILTER: 'pending',
   CONVERSATION_TYPE: {
     MENTION: 'mention',
     PARTICIPATING: 'participating',

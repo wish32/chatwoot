@@ -16,6 +16,10 @@ import {
   BaseTableRow,
   BaseTableCell,
 } from 'dashboard/components-next/table';
+import {
+  isTakehkManagedBot,
+  takehkWebhookUrl,
+} from 'dashboard/helper/takehkManagedAgentBot';
 
 const MODAL_TYPES = {
   CREATE: 'create',
@@ -51,6 +55,11 @@ const filteredAgentBots = computed(() => {
   return picoSearch(agentBots.value, query, ['name', 'description']);
 });
 
+const webhookLabel = bot =>
+  isTakehkManagedBot(bot)
+    ? takehkWebhookUrl(bot)
+    : bot.outgoing_url || bot.bot_config?.webhook_url || '';
+
 const openAddModal = () => {
   modalType.value = MODAL_TYPES.CREATE;
   selectedBot.value = {};
@@ -73,7 +82,7 @@ const deleteAgentBot = async id => {
     await store.dispatch('agentBots/delete', id);
     useAlert(t('AGENT_BOTS.DELETE.API.SUCCESS_MESSAGE'));
   } catch (error) {
-    useAlert(t('AGENT_BOTS.DELETE.API.ERROR_MESSAGE'));
+    useAlert(error?.message || t('AGENT_BOTS.DELETE.API.ERROR_MESSAGE'));
   } finally {
     loading.value[id] = false;
     selectedBot.value = {};
@@ -161,7 +170,7 @@ onMounted(() => {
 
               <BaseTableCell class="max-w-0">
                 <span class="text-body-main text-n-slate-11 truncate block">
-                  {{ bot.outgoing_url || bot.bot_config?.webhook_url }}
+                  {{ webhookLabel(bot) }}
                 </span>
               </BaseTableCell>
 
@@ -177,7 +186,7 @@ onMounted(() => {
                     @click="openEditModal(bot)"
                   />
                   <Button
-                    v-if="!bot.system_bot"
+                    v-if="!bot.system_bot && !isTakehkManagedBot(bot)"
                     v-tooltip.top="t('AGENT_BOTS.DELETE.BUTTON_TEXT')"
                     icon="i-woot-bin"
                     slate

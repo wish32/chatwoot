@@ -1,6 +1,10 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import ViewWithHeader from './components/layouts/ViewWithHeader.vue';
 import store from './store';
+import {
+  isDirectConversationEnabled,
+  preChatFormRequired,
+} from './helpers/directConversation';
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -63,7 +67,21 @@ const router = createRouter({
  * @see https://github.com/chatwoot/chatwoot/issues/10736
  */
 
+let initialEntryChecked = false;
+
 router.beforeEach(async (to, from, next) => {
+  if (
+    !initialEntryChecked &&
+    to.name === 'home' &&
+    isDirectConversationEnabled() &&
+    !preChatFormRequired()
+  ) {
+    initialEntryChecked = true;
+    next({ name: 'messages', replace: true });
+    return;
+  }
+  initialEntryChecked = true;
+
   // Prevent any user interactions during route transition
   await store.dispatch('appConfig/setRouteTransitionState', true);
   next();

@@ -107,6 +107,7 @@ export default {
       locktoSingleConversation: false,
       allowMessagesAfterResolved: true,
       continuityViaEmail: true,
+      directConversation: true,
       selectedInboxName: '',
       channelWebsiteUrl: '',
       webhookUrl: '',
@@ -564,6 +565,7 @@ export default {
       this.allowMessagesAfterResolved =
         this.inbox.allow_messages_after_resolved;
       this.continuityViaEmail = this.inbox.continuity_via_email;
+      this.directConversation = this.inbox.direct_conversation !== false;
       this.channelWebsiteUrl = this.inbox.website_url;
       this.channelWelcomeTitle = this.inbox.welcome_title;
       this.channelWelcomeTagline = this.inbox.welcome_tagline || '';
@@ -713,6 +715,7 @@ export default {
             reply_time: this.replyTime || 'in_a_few_minutes',
             continuity_via_email:
               this.isInboundEmailEnabled && this.continuityViaEmail,
+            direct_conversation: this.directConversation,
           },
         };
         if (this.avatarFile) {
@@ -1322,6 +1325,15 @@ export default {
 
               <SettingsToggleSection
                 v-if="isAWebWidgetInbox"
+                v-model="directConversation"
+                :header="$t('INBOX_MGMT.SETTINGS_POPUP.DIRECT_CONVERSATION')"
+                :description="
+                  $t('INBOX_MGMT.SETTINGS_POPUP.DIRECT_CONVERSATION_SUB_TEXT')
+                "
+              />
+
+              <SettingsToggleSection
+                v-if="isAWebWidgetInbox"
                 v-model="emailCollectEnabled"
                 :header="
                   $t('INBOX_MGMT.SETTINGS_POPUP.ENABLE_EMAIL_COLLECT_BOX')
@@ -1399,6 +1411,8 @@ export default {
                 :widget-bubble-launcher-title="widgetBubbleLauncherTitle"
                 :widget-bubble-type="widgetBubbleType"
                 :web-widget-script="inbox.web_widget_script"
+                :direct-conversation="directConversation"
+                :quick-actions="inbox.takehk_quick_actions || []"
               />
             </div>
           </div>

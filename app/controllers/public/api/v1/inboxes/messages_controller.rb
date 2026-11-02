@@ -24,7 +24,7 @@ class Public::Api::V1::Inboxes::MessagesController < Public::Api::V1::InboxesCon
   def build_attachment
     return if params[:attachments].blank?
 
-    params[:attachments].each do |uploaded_attachment|
+    Takehk::AttachmentBatch.limit(params[:attachments]).each do |uploaded_attachment|
       @message.attachments.new(
         account_id: @message.account_id,
         file_type: helpers.file_type(uploaded_attachment&.content_type),

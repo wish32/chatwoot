@@ -498,9 +498,14 @@ Rails.application.routes.draw do
         resource :config, only: [:create]
         resources :campaigns, only: [:index]
         resources :events, only: [:create]
-        resources :messages, only: [:index, :create, :update]
+        resources :messages, only: [:index, :create, :update] do
+          member do
+            post :recall, to: 'message_recalls#create'
+          end
+        end
         resources :conversations, only: [:index, :create] do
           collection do
+            post :open
             post :destroy_custom_attributes
             post :set_custom_attributes
             post :update_last_seen

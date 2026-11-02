@@ -42,6 +42,8 @@ class AgentBot < ApplicationRecord
   enum bot_type: { webhook: 0 }
 
   validates :outgoing_url, length: { maximum: Limits::URL_LENGTH_LIMIT }
+  validate :lock_takehk_outgoing_url
+  before_destroy :lock_takehk_destroy
 
   def available_name
     name
@@ -66,6 +68,22 @@ class AgentBot < ApplicationRecord
 
   def system_bot?
     account.nil?
+  end
+
+  private
+
+  def lock_takehk_outgoing_url
+    return unless will_save_change_to_outgoing_url?
+    return unless Takehk::ManagedAgentBot.outgoing_url_write?(self, outgoing_url)
+
+    errors.add(:base, Takehk::ManagedAgentBot::MESSAGE)
+  end
+
+  def lock_takehk_destroy
+    return unless Takehk::ManagedAgentBot.managed?(self)
+
+    errors.add(:base, Takehk::ManagedAgentBot::MESSAGE)
+    throw(:abort)
   end
 end
 

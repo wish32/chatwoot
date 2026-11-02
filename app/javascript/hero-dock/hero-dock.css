@@ -164,7 +164,7 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  padding: 0.15rem 0.55rem 0.2rem;
+  padding: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -173,26 +173,6 @@
   opacity: 1;
   pointer-events: auto;
   transition: opacity 0.35s ease 0.18s;
-}
-
-.thd-close {
-  align-self: flex-end;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #6e6e73;
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 500;
-  line-height: normal;
-  cursor: pointer;
-  padding: 0.05rem 0.1rem;
-  line-height: 1.2;
-}
-
-.thd-close:hover {
-  color: var(--thd-text);
 }
 
 .thd-thread {
@@ -208,7 +188,34 @@
   width: 100%;
   height: 100%;
   border: 0;
+  background: transparent;
+}
+
+.thd-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  justify-content: center;
   background: #fff;
+}
+
+.thd-dock.is-open.is-loading .thd-loading {
+  display: flex;
+}
+
+.thd-spinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid rgba(105, 108, 255, 0.22);
+  border-top-color: #696cff;
+  border-radius: 50%;
+  animation: thd-spin 0.7s linear infinite;
+}
+
+@keyframes thd-spin {
+  to { transform: rotate(360deg); }
 }
 
 .thd-dock-placeholder {
@@ -236,7 +243,8 @@ html.takehk-chat-dock .woot-widget-holder {
   }
 
   .thd-caret,
-  .thd-bubble {
+  .thd-bubble,
+  .thd-spinner {
     animation: none;
   }
 }
@@ -270,6 +278,6 @@ html.takehk-chat-dock .woot-widget-holder {
   }
 
   .thd-stage {
-    padding: 0.1rem 0.4rem 0.15rem;
+    padding: 0;
   }
 }

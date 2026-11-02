@@ -11,7 +11,9 @@ json.website_channel_config do
   json.out_of_office_message @web_widget.inbox.out_of_office_message
   json.portal @web_widget.inbox.portal
   json.pre_chat_form_enabled @web_widget.pre_chat_form_enabled
+  json.direct_conversation(@web_widget.has_attribute?(:direct_conversation) ? @web_widget.direct_conversation : true)
   json.pre_chat_form_options @web_widget.pre_chat_form_options
+  json.takehkQuickActions(@web_widget.takehk_quick_actions.presence || [])
   json.reply_time @web_widget.reply_time
   json.timezone @web_widget.inbox.timezone
   json.utc_off_set ActiveSupport::TimeZone[@web_widget.inbox.timezone].now.formatted_offset

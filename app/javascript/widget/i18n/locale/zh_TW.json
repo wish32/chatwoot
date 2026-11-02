@@ -10,6 +10,11 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "重新發送訊息",
       "ERROR_MESSAGE": "無法傳送！請重新嘗試。"
+    },
+    "MEDIA_VIEWER": {
+      "CLOSE": "關閉",
+      "PREVIOUS": "上一張",
+      "NEXT": "下一張"
     }
   },
   "THUMBNAIL": {
@@ -44,6 +49,21 @@
   },
   "START_CONVERSATION": "開始對話",
   "END_CONVERSATION": "結束對話",
+  "END_CONVERSATION_CONFIRM": {
+    "MESSAGE": "對話記錄將會刪除，是否繼續",
+    "CONTINUE": "繼續",
+    "CANCEL": "取消"
+  },
+  "MESSAGE_ACTIONS": {
+    "MENU": "訊息操作",
+    "REPLY": "回復",
+    "COPY": "複製",
+    "RECALL": "撤回",
+    "DELETE": "刪除",
+    "RECALLED": "你已撤回一則訊息",
+    "COPIED": "已複製",
+    "RECALL_FAILED": "這則訊息已不能撤回"
+  },
   "CONTINUE_CONVERSATION": "繼續對話",
   "YOU": "您",
   "START_NEW_CONVERSATION": "開始一個新對話",
@@ -96,6 +116,7 @@
     "REGEX_ERROR": "請輸入有效的字符"
   },
   "FILE_SIZE_LIMIT": "{MAXIMUM_FILE_UPLOAD_SIZE} 已超出檔案大小限制",
+  "FILE_COUNT_LIMIT": "一次最多可以上傳 {count} 個檔案",
   "CHAT_FORM": {
     "INVALID": {
       "FIELD": "無效的欄位"

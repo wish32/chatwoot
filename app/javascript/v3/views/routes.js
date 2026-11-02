@@ -3,7 +3,7 @@ import { frontendURL } from 'dashboard/helper/URLHelper';
 import Login from './login/Index.vue';
 import SamlLogin from './login/Saml.vue';
 import Signup from './auth/signup/Index.vue';
-import ResetPassword from './auth/reset/password/Index.vue';
+import ResetPassword from './auth/reset/password/PartnerResetPassword.vue';
 import Confirmation from './auth/confirmation/Index.vue';
 import VerifyEmail from './auth/verify-email/Index.vue';
 import PasswordEdit from './auth/password/Edit.vue';

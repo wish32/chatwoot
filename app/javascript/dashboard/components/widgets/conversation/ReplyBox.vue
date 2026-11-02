@@ -30,6 +30,7 @@ import {
 import WhatsappTemplates from './WhatsappTemplates/Modal.vue';
 import ContentTemplates from './ContentTemplates/ContentTemplatesModal.vue';
 import { MESSAGE_MAX_LENGTH } from 'shared/helpers/MessageTypeHelper';
+import { TAKEHK_MAX_ATTACHMENTS } from 'shared/helpers/takehkAttachmentGrid';
 import inboxMixin, { INBOX_FEATURES } from 'shared/mixins/inboxMixin';
 import { trimContent, debounce, getRecipients } from '@chatwoot/utils';
 import wootConstants from 'dashboard/constants/globals';
@@ -1131,6 +1132,9 @@ export default {
     attachFile({ blob, file }) {
       if (!this.showFileUpload && !this.isOnPrivateNote) return;
 
+      const isVoiceMessage = Boolean(file?.isVoiceMessage);
+      if (!isVoiceMessage && !this.reserveAttachmentSlot()) return;
+
       const reader = new FileReader();
       reader.readAsDataURL(file.file);
       reader.onloadend = () => {
@@ -1140,9 +1144,38 @@ export default {
           isPrivate: this.isPrivate,
           thumb: reader.result,
           blobSignedId: blob ? blob.signed_id : undefined,
-          isVoiceMessage: file?.isVoiceMessage || false,
+          isVoiceMessage,
         });
+        if (!isVoiceMessage) this.releaseAttachmentSlot();
       };
+      reader.onerror = () => {
+        if (!isVoiceMessage) this.releaseAttachmentSlot();
+      };
+    },
+    reserveAttachmentSlot() {
+      const reserved = this.takehkReservedSlots || 0;
+      if (this.attachedFiles.length + reserved >= TAKEHK_MAX_ATTACHMENTS) {
+        if (!this.takehkAttachmentLimitAlerted) {
+          this.takehkAttachmentLimitAlerted = true;
+          useAlert(
+            this.$t('CONVERSATION.FILE_COUNT_LIMIT', {
+              count: TAKEHK_MAX_ATTACHMENTS,
+            })
+          );
+        }
+        return false;
+      }
+      this.takehkReservedSlots = reserved + 1;
+      return true;
+    },
+    releaseAttachmentSlot() {
+      this.takehkReservedSlots = Math.max(
+        (this.takehkReservedSlots || 1) - 1,
+        0
+      );
+      if (this.takehkReservedSlots === 0) {
+        this.takehkAttachmentLimitAlerted = false;
+      }
     },
     removeAttachment(attachments) {
       this.attachedFiles = attachments;

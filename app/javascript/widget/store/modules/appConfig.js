@@ -8,6 +8,13 @@ import {
   SET_ROUTE_UPDATE_STATE,
 } from '../types';
 
+function initialTakehkQuickActions() {
+  const channel =
+    typeof window !== 'undefined' ? window.chatwootWebChannel : undefined;
+  const list = channel && channel.takehkQuickActions;
+  return Array.isArray(list) ? list : [];
+}
+
 const state = {
   hideMessageBubble: false,
   isCampaignViewClicked: false,
@@ -28,6 +35,7 @@ const state = {
   enableFileUpload: undefined,
   enableEmojiPicker: true,
   enableEndConversation: true,
+  takehkQuickActions: initialTakehkQuickActions(),
 };
 
 export const getters = {
@@ -51,9 +59,8 @@ export const getters = {
 };
 
 export const actions = {
-  setAppConfig(
-    { commit },
-    {
+  setAppConfig({ commit }, payload = {}) {
+    const {
       showPopoutButton,
       position,
       hideMessageBubble,
@@ -67,9 +74,8 @@ export const actions = {
       enableFileUpload = undefined,
       enableEmojiPicker = true,
       enableEndConversation = true,
-    }
-  ) {
-    commit(SET_WIDGET_APP_CONFIG, {
+    } = payload;
+    const nextConfig = {
       hideMessageBubble: !!hideMessageBubble,
       position: position || 'right',
       showPopoutButton: !!showPopoutButton,
@@ -83,7 +89,11 @@ export const actions = {
       enableFileUpload,
       enableEmojiPicker,
       enableEndConversation,
-    });
+    };
+    if (Array.isArray(payload.takehkQuickActions)) {
+      nextConfig.takehkQuickActions = payload.takehkQuickActions;
+    }
+    commit(SET_WIDGET_APP_CONFIG, nextConfig);
   },
   toggleWidgetOpen({ commit }, isWidgetOpen) {
     commit(TOGGLE_WIDGET_OPEN, isWidgetOpen);
@@ -125,6 +135,9 @@ export const mutations = {
     $state.enableFileUpload = data.enableFileUpload;
     $state.enableEmojiPicker = data.enableEmojiPicker;
     $state.enableEndConversation = data.enableEndConversation;
+    if (Array.isArray(data.takehkQuickActions)) {
+      $state.takehkQuickActions = data.takehkQuickActions;
+    }
   },
   [TOGGLE_WIDGET_OPEN]($state, isWidgetOpen) {
     $state.isWidgetOpen = isWidgetOpen;

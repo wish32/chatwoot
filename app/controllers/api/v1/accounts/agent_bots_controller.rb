@@ -14,7 +14,12 @@ class Api::V1::Accounts::AgentBotsController < Api::V1::Accounts::BaseController
   end
 
   def update
-    @agent_bot.update!(permitted_params.except(:avatar_url))
+    if Takehk::ManagedAgentBot.outgoing_url_write?(@agent_bot, params[:outgoing_url])
+      render json: { error: Takehk::ManagedAgentBot::MESSAGE }, status: :unprocessable_entity
+      return
+    end
+
+    @agent_bot.update!(update_params)
     process_avatar_from_url
   end
 
@@ -24,6 +29,11 @@ class Api::V1::Accounts::AgentBotsController < Api::V1::Accounts::BaseController
   end
 
   def destroy
+    if Takehk::ManagedAgentBot.managed?(@agent_bot)
+      render json: { error: Takehk::ManagedAgentBot::MESSAGE }, status: :unprocessable_entity
+      return
+    end
+
     @agent_bot.destroy!
     head :ok
   end
@@ -46,6 +56,12 @@ class Api::V1::Accounts::AgentBotsController < Api::V1::Accounts::BaseController
 
   def permitted_params
     params.permit(:name, :description, :outgoing_url, :avatar, :avatar_url, :bot_type, bot_config: {})
+  end
+
+  def update_params
+    excluded = [:avatar_url]
+    excluded << :outgoing_url if Takehk::ManagedAgentBot.managed?(@agent_bot)
+    permitted_params.except(*excluded)
   end
 
   def process_avatar_from_url

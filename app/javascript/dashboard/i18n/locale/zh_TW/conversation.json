@@ -336,6 +336,7 @@
     "SUCCESS_DELETE_CONVERSATION": "對話已成功刪除",
     "FAIL_DELETE_CONVERSATION": "無法刪除對話！請再試一次",
     "FILE_SIZE_LIMIT": "檔案超過 {MAXIMUM_SUPPORTED_FILE_UPLOAD_SIZE} MB 的附件大小限制",
+    "FILE_COUNT_LIMIT": "一次最多可以上傳 {count} 個檔案",
     "FILE_TYPE_NOT_SUPPORTED": "此對話不支援 {fileName} 檔案類型",
     "MESSAGE_ERROR": "無法發送此訊息，請稍後再試",
     "SENT_BY": "發送者：",

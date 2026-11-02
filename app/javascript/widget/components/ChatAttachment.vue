@@ -12,6 +12,7 @@ import { DirectUpload } from 'activestorage';
 import { mapGetters } from 'vuex';
 import { emitter } from 'shared/helpers/mitt';
 import { useAttachments } from '../composables/useAttachments';
+import { TAKEHK_MAX_ATTACHMENTS } from 'shared/helpers/takehkAttachmentGrid';
 
 export default {
   components: { FluentIcon, FileUpload, Spinner },
@@ -26,7 +27,7 @@ export default {
     return { canHandleAttachments };
   },
   data() {
-    return { isUploading: false };
+    return { isUploading: false, pendingFiles: [], flushTimer: null };
   },
   computed: {
     ...mapGetters({
@@ -46,6 +47,7 @@ export default {
   },
   unmounted() {
     document.removeEventListener('paste', this.handleClipboardPaste);
+    clearTimeout(this.flushTimer);
   },
   methods: {
     handleClipboardPaste(e) {
@@ -63,80 +65,100 @@ export default {
         }
       });
     },
-    getFileType(fileType) {
-      return fileType.includes('image') ? 'image' : 'file';
+    getFileType(fileType = '') {
+      if (fileType.includes('image')) return 'image';
+      if (fileType.includes('video')) return 'video';
+      if (fileType.includes('audio')) return 'audio';
+      return 'file';
     },
-    async onFileUpload(file) {
-      if (this.globalConfig.directUploadsEnabled) {
-        await this.onDirectFileUpload(file);
-      } else {
-        await this.onIndirectFileUpload(file);
-      }
+    onFileUpload(newFile, oldFile) {
+      if (!newFile || oldFile) return;
+
+      this.pendingFiles.push(newFile);
+      clearTimeout(this.flushTimer);
+      this.flushTimer = setTimeout(() => {
+        this.flushPendingFiles();
+      }, 40);
     },
-    async onDirectFileUpload(file) {
-      if (!file) {
-        return;
+    async flushPendingFiles() {
+      const queued = this.pendingFiles.splice(0, this.pendingFiles.length);
+      if (!queued.length) return;
+
+      const accepted = [];
+      let oversized = false;
+      queued.forEach(file => {
+        if (accepted.length >= TAKEHK_MAX_ATTACHMENTS) return;
+        if (checkFileSizeLimit(file, this.fileUploadSizeLimit)) {
+          accepted.push(file);
+        } else {
+          oversized = true;
+        }
+      });
+
+      if (queued.length > TAKEHK_MAX_ATTACHMENTS) {
+        emitter.emit(BUS_EVENTS.SHOW_ALERT, {
+          message: this.$t('FILE_COUNT_LIMIT', {
+            count: TAKEHK_MAX_ATTACHMENTS,
+          }),
+        });
       }
+      if (oversized) {
+        emitter.emit(BUS_EVENTS.SHOW_ALERT, {
+          message: this.$t('FILE_SIZE_LIMIT', {
+            MAXIMUM_FILE_UPLOAD_SIZE: this.fileUploadSizeLimit,
+          }),
+        });
+      }
+      if (!accepted.length) return;
+
       this.isUploading = true;
       try {
-        if (checkFileSizeLimit(file, this.fileUploadSizeLimit)) {
-          const { websiteToken } = window.chatwootWebChannel;
-          const upload = new DirectUpload(
-            file.file,
-            `/api/v1/widget/direct_uploads?website_token=${websiteToken}`,
-            {
-              directUploadWillCreateBlobWithXHR: xhr => {
-                xhr.setRequestHeader('X-Auth-Token', window.authToken);
-              },
-            }
-          );
-
-          upload.create((error, blob) => {
-            if (error) {
-              emitter.emit(BUS_EVENTS.SHOW_ALERT, {
-                message: error,
-              });
-            } else {
-              this.onAttach({
-                file: blob.signed_id,
-                ...this.getLocalFileAttributes(file),
-              });
-            }
-          });
-        } else {
-          emitter.emit(BUS_EVENTS.SHOW_ALERT, {
-            message: this.$t('FILE_SIZE_LIMIT', {
-              MAXIMUM_FILE_UPLOAD_SIZE: this.fileUploadSizeLimit,
-            }),
-          });
-        }
+        const prepared = await accepted.reduce(async (collected, file) => {
+          const items = await collected;
+          const item = await this.prepareUpload(file);
+          if (item) items.push(item);
+          return items;
+        }, Promise.resolve([]));
+        if (prepared.length) await this.onAttach({ files: prepared });
       } catch (error) {
         // Error
       }
       this.isUploading = false;
     },
-    async onIndirectFileUpload(file) {
-      if (!file) {
-        return;
+    prepareUpload(file) {
+      if (this.globalConfig.directUploadsEnabled) {
+        return this.directUpload(file);
       }
-      this.isUploading = true;
-      try {
-        if (checkFileSizeLimit(file, this.fileUploadSizeLimit)) {
-          await this.onAttach({
-            file: file.file,
+      return Promise.resolve({
+        file: file.file,
+        ...this.getLocalFileAttributes(file),
+      });
+    },
+    directUpload(file) {
+      const { websiteToken } = window.chatwootWebChannel;
+      const upload = new DirectUpload(
+        file.file,
+        `/api/v1/widget/direct_uploads?website_token=${websiteToken}`,
+        {
+          directUploadWillCreateBlobWithXHR: xhr => {
+            xhr.setRequestHeader('X-Auth-Token', window.authToken);
+          },
+        }
+      );
+
+      return new Promise(resolve => {
+        upload.create((error, blob) => {
+          if (error) {
+            emitter.emit(BUS_EVENTS.SHOW_ALERT, { message: error });
+            resolve(null);
+            return;
+          }
+          resolve({
+            file: blob.signed_id,
             ...this.getLocalFileAttributes(file),
           });
-        } else {
-          emitter.emit(BUS_EVENTS.SHOW_ALERT, {
-            message: this.$t('FILE_SIZE_LIMIT', {
-              MAXIMUM_FILE_UPLOAD_SIZE: this.fileUploadSizeLimit,
-            }),
-          });
-        }
-      } catch (error) {
-        // Error
-      }
-      this.isUploading = false;
+        });
+      });
     },
     getLocalFileAttributes(file) {
       return {
@@ -153,6 +175,7 @@ export default {
     ref="upload"
     :size="4096 * 2048"
     :accept="allowedFileTypes"
+    :multiple="true"
     :data="{
       direct_upload_url: '/api/v1/widget/direct_uploads',
       direct_upload: true,

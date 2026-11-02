@@ -10,6 +10,11 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "Send message again",
       "ERROR_MESSAGE": "Couldn't send, try again"
+    },
+    "MEDIA_VIEWER": {
+      "CLOSE": "Close",
+      "PREVIOUS": "Previous",
+      "NEXT": "Next"
     }
   },
   "THUMBNAIL": {
@@ -44,6 +49,21 @@
   },
   "START_CONVERSATION": "Start Conversation",
   "END_CONVERSATION": "End Conversation",
+  "END_CONVERSATION_CONFIRM": {
+    "MESSAGE": "Conversation history will be deleted. Continue?",
+    "CONTINUE": "Continue",
+    "CANCEL": "Cancel"
+  },
+  "MESSAGE_ACTIONS": {
+    "MENU": "Message actions",
+    "REPLY": "Reply",
+    "COPY": "Copy",
+    "RECALL": "Recall",
+    "DELETE": "Delete",
+    "RECALLED": "You recalled a message",
+    "COPIED": "Copied",
+    "RECALL_FAILED": "This message can no longer be recalled"
+  },
   "CONTINUE_CONVERSATION": "Continue conversation",
   "YOU": "You",
   "START_NEW_CONVERSATION": "Start a new conversation",
@@ -96,6 +116,7 @@
     "REGEX_ERROR": "Please provide a valid input"
   },
   "FILE_SIZE_LIMIT": "File exceeds the {MAXIMUM_FILE_UPLOAD_SIZE} attachment limit",
+  "FILE_COUNT_LIMIT": "You can upload up to {count} files at once",
   "CHAT_FORM": {
     "INVALID": {
       "FIELD": "Invalid field"

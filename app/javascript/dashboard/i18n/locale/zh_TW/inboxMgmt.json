@@ -118,7 +118,7 @@
         },
         "CHANNEL_GREETING_TOGGLE": {
           "LABEL": "啟用頻道問候功能",
-          "HELP_TEXT": "當客戶發起對話並發送第一則訊息時，自動發送問候訊息。",
+          "HELP_TEXT": "用戶打開對話時，自動發送問候訊息。",
           "ENABLED": "已啟用",
           "DISABLED": "已停用"
         },
@@ -993,6 +993,34 @@
         "LABEL": "在行動應用程式中啟用小工具",
         "SUBTITLE": "如果您將小工具嵌入 iOS 或 Android 應用程式，請勾選此項。行動應用程式不會發送網域資訊，因此除非啟用此選項，否則會被網域限制封鎖。"
       },
+      "QUICK_ACTIONS": {
+        "TITLE": "Widget 快捷按鈕",
+        "DESCRIPTION": "這些按鈕顯示在輸入框上方。訪客點擊後，會把對應訊息當成客戶訊息送出。瀏覽器語言為中文時使用中文標籤和訊息，其他語言使用英文。沒有按鈕時不顯示這一列。",
+        "ADD": "新增按鈕",
+        "REMOVE": "刪除",
+        "ID": "ID",
+        "ID_PLACEHOLDER": "incorporate",
+        "LABEL_ZH": "中文標籤",
+        "LABEL_ZH_PLACEHOLDER": "註冊公司",
+        "LABEL_EN": "英文標籤",
+        "LABEL_EN_PLACEHOLDER": "Incorporate",
+        "MESSAGE_ZH": "中文訊息",
+        "MESSAGE_ZH_PLACEHOLDER": "我想註冊香港公司",
+        "MESSAGE_EN": "英文訊息",
+        "MESSAGE_EN_PLACEHOLDER": "I want to incorporate a Hong Kong company",
+        "MESSAGE_HINT": "可留空。留空時，點擊後送出對應語言的標籤。",
+        "EMPTY": "還沒有快捷按鈕。訪客端不會顯示這一列。",
+        "LIMIT": "最多 8 個按鈕。",
+        "ERRORS": {
+          "ID_REQUIRED": "請填寫唯一 ID。",
+          "ID_FORMAT": "ID 只能使用字母、數字、連字號或底線。",
+          "ID_DUPLICATE": "這個 ID 已經用過。",
+          "LABEL_REQUIRED": "請至少填寫中文或英文標籤。",
+          "LABEL_TOO_LONG": "標籤不能超過 120 個字元。",
+          "MESSAGE_TOO_LONG": "訊息不能超過 1000 個字元。",
+          "LIMIT": "最多儲存 8 個按鈕。"
+        }
+      },
       "IDENTITY_VALIDATION": {
         "TITLE": "身份驗證",
         "DESCRIPTION": "透過產生安全 Token 來驗證使用者身份。這可以防止未授權使用者在您的聊天中冒充他人。",
@@ -1006,6 +1034,8 @@
       "AGENT_ASSIGNMENT": "對話分配",
       "AGENT_ASSIGNMENT_SUB_TEXT": "更新對話分配設定",
       "UPDATE": "更新",
+      "DIRECT_CONVERSATION": "直接進入對話框？",
+      "DIRECT_CONVERSATION_SUB_TEXT": "打開後直接進入對話，客服不在線也可以留言。需要填表時仍會先填表。打招呼、未讀訊息和活動訊息維持原樣。若已連結說明中心，對話中的返回仍可看到文章。",
       "ENABLE_EMAIL_COLLECT_BOX": "啟用電子郵件收集框",
       "ENABLE_EMAIL_COLLECT_BOX_SUB_TEXT": "在新對話中啟用或停用電子郵件收集框",
       "AUTO_ASSIGNMENT": "啟用自動分配",
@@ -1480,8 +1510,8 @@
         "USER_MESSAGE": "您好",
         "AGENT_MESSAGE": "哈囉"
       },
-      "BRANDING_TEXT": "Powered by Chatwoot",
-      "SCRIPT_SETTINGS": "\n      window.chatwootSettings = {options};"
+      "BRANDING_TEXT": "Powered by TakeHK",
+      "SCRIPT_SETTINGS": "\n      window.takehkSettings = {options};"
     },
     "EMAIL_PROVIDERS": {
       "MICROSOFT": {

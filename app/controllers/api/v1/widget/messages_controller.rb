@@ -30,16 +30,25 @@ class Api::V1::Widget::MessagesController < Api::V1::Widget::BaseController
 
   private
 
+  def attachment_file_type(uploaded_attachment)
+    if uploaded_attachment.is_a?(ActionDispatch::Http::UploadedFile)
+      helpers.file_type(uploaded_attachment.content_type)
+    elsif uploaded_attachment.is_a?(String)
+      helpers.file_type_by_signed_id(uploaded_attachment)
+    end
+  end
+
   def build_attachment
     return if params[:message][:attachments].blank?
 
-    params[:message][:attachments].each do |uploaded_attachment|
+    Takehk::AttachmentBatch.limit(params[:message][:attachments]).each do |uploaded_attachment|
       attachment = @message.attachments.new(
         account_id: @message.account_id,
         file: uploaded_attachment
       )
 
-      attachment.file_type = helpers.file_type(uploaded_attachment&.content_type) if uploaded_attachment.is_a?(ActionDispatch::Http::UploadedFile)
+      file_type = attachment_file_type(uploaded_attachment)
+      attachment.file_type = file_type if file_type
     end
   end
 

@@ -47,7 +47,8 @@ const runSDK = ({ baseUrl, websiteToken }) => {
     restoreWidgetInDOM(event.newDocument.body)
   );
 
-  const chatwootSettings = window.chatwootSettings || {};
+  const chatwootSettings =
+    window.takehkSettings || window.TakeHKSettings || window.chatwootSettings || {};
   let locale = chatwootSettings.locale;
   let baseDomain = chatwootSettings.baseDomain;
 
@@ -216,6 +217,9 @@ const runSDK = ({ baseUrl, websiteToken }) => {
   });
 };
 
-window.chatwootSDK = {
+const takehkSDK = {
   run: runSDK,
 };
+
+window.chatwootSDK = takehkSDK;
+window.TakeHK = takehkSDK;

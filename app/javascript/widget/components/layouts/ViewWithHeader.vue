@@ -6,6 +6,10 @@ import ChatHeaderExpanded from '../ChatHeaderExpanded.vue';
 import configMixin from '../../mixins/configMixin';
 import { mapGetters } from 'vuex';
 import { IFrameHelper } from 'widget/helpers/utils';
+import {
+  hasHelpCenter,
+  isDirectConversationEnabled,
+} from 'widget/helpers/directConversation';
 
 export default {
   components: {
@@ -44,9 +48,18 @@ export default {
       );
     },
     showBackButton() {
-      return ['article-viewer', 'messages', 'prechat-form'].includes(
+      const onInnerView = ['article-viewer', 'messages', 'prechat-form'].includes(
         this.$route.name
       );
+      if (!onInnerView) return false;
+      if (
+        isDirectConversationEnabled() &&
+        !hasHelpCenter() &&
+        this.$route.name !== 'article-viewer'
+      ) {
+        return false;
+      }
+      return true;
     },
     isOnArticleViewer() {
       return ['article-viewer'].includes(this.$route.name);
@@ -112,8 +125,6 @@ export default {
         :class="{
           expanded: !isHeaderCollapsed,
           collapsed: isHeaderCollapsed,
-          'shadow-[0_10px_15px_-16px_rgba(50,50,93,0.08),0_4px_6px_-8px_rgba(50,50,93,0.04)]':
-            isHeaderCollapsed,
           ...opacityClass,
         }"
       >

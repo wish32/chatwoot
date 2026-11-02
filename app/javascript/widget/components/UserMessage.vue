@@ -1,10 +1,8 @@
 <script>
 import UserMessageBubble from 'widget/components/UserMessageBubble.vue';
-import MessageReplyButton from 'widget/components/MessageReplyButton.vue';
-import ImageBubble from 'widget/components/ImageBubble.vue';
-import VideoBubble from 'widget/components/VideoBubble.vue';
+import MessageActionMenu from 'widget/components/MessageActionMenu.vue';
+import TakehkAttachmentGroup from 'widget/components/TakehkAttachmentGroup.vue';
 import FluentIcon from 'shared/components/FluentIcon/Index.vue';
-import FileBubble from 'widget/components/FileBubble.vue';
 import { messageStamp } from 'shared/helpers/timeHelper';
 import messageMixin from '../mixins/messageMixin';
 import ReplyToChip from 'widget/components/ReplyToChip.vue';
@@ -17,10 +15,8 @@ export default {
   name: 'UserMessage',
   components: {
     UserMessageBubble,
-    MessageReplyButton,
-    ImageBubble,
-    VideoBubble,
-    FileBubble,
+    MessageActionMenu,
+    TakehkAttachmentGroup,
     FluentIcon,
     ReplyToChip,
     DragWrapper,
@@ -36,12 +32,6 @@ export default {
       default: () => {},
     },
   },
-  data() {
-    return {
-      hasImageError: false,
-      hasVideoError: false,
-    };
-  },
   computed: {
     ...mapGetters({
       widgetColor: 'appConfig/getWidgetColor',
@@ -51,9 +41,16 @@ export default {
       const { status = '' } = this.message;
       return status === 'in_progress';
     },
+    isRecalled() {
+      return !!this.message.content_attributes?.recalled;
+    },
     showTextBubble() {
       const { message } = this;
-      return !!message.content;
+      return !!message.content || this.isRecalled;
+    },
+    displayContent() {
+      if (this.isRecalled) return this.$t('MESSAGE_ACTIONS.RECALLED');
+      return this.message.content;
     },
     readableTime() {
       const { created_at: createdAt = '' } = this.message;
@@ -73,27 +70,11 @@ export default {
       return this.replyTo && (this.replyTo.content || this.replyTo.attachments);
     },
   },
-  watch: {
-    message() {
-      this.hasImageError = false;
-      this.hasVideoError = false;
-    },
-  },
-  mounted() {
-    this.hasImageError = false;
-    this.hasVideoError = false;
-  },
   methods: {
     async retrySendMessage() {
       await this.$store.dispatch('conversation/sendMessageWithData', {
         message: this.message,
       });
-    },
-    onImageLoadError() {
-      this.hasImageError = true;
-    },
-    onVideoLoadError() {
-      this.hasVideoError = true;
     },
     toggleReply() {
       emitter.emit(BUS_EVENTS.TOGGLE_REPLY_TO_MESSAGE, this.message);
@@ -112,56 +93,29 @@ export default {
         <div v-if="hasReplyTo" class="flex justify-end mt-2 mb-1 text-xs">
           <ReplyToChip :reply-to="replyTo" />
         </div>
-        <div class="flex justify-end gap-1">
-          <div class="flex flex-col justify-end">
-            <MessageReplyButton
-              v-if="!isInProgress && !isFailed"
-              class="transition-opacity delay-75 opacity-0 group-hover:opacity-100 sm:opacity-0"
-              @click="toggleReply"
-            />
-          </div>
+        <div
+          class="flex justify-end gap-1"
+          :class="{ 'is-recalled': isRecalled }"
+        >
           <DragWrapper direction="left" @dragged="toggleReply">
             <UserMessageBubble
               v-if="showTextBubble"
-              :message="message.content"
+              :message="displayContent"
               :status="message.status"
               :widget-color="widgetColor"
               :readable-time="readableTime"
             />
-            <div
-              v-if="hasAttachments"
-              class="chat-bubble has-attachment user"
-              :style="{ backgroundColor: widgetColor }"
-            >
-              <div
-                v-for="attachment in message.attachments"
-                :key="attachment.id"
-              >
-                <ImageBubble
-                  v-if="attachment.file_type === 'image' && !hasImageError"
-                  :url="attachment.data_url"
-                  :thumb="attachment.data_url"
-                  :readable-time="readableTime"
-                  @error="onImageLoadError"
-                />
-
-                <VideoBubble
-                  v-if="attachment.file_type === 'video' && !hasVideoError"
-                  :url="attachment.data_url"
-                  :readable-time="readableTime"
-                  @error="onVideoLoadError"
-                />
-
-                <FileBubble
-                  v-else
-                  :url="attachment.data_url"
-                  :is-in-progress="isInProgress"
-                  :widget-color="widgetColor"
-                  is-user-bubble
-                />
-              </div>
+            <div v-if="hasAttachments" class="chat-bubble has-attachment user">
+              <TakehkAttachmentGroup
+                :attachments="message.attachments"
+                :widget-color="widgetColor"
+                :is-in-progress="isInProgress"
+                :readable-time="readableTime"
+                is-user-bubble
+              />
             </div>
           </DragWrapper>
+          <MessageActionMenu :message="message" />
         </div>
         <div
           v-if="isFailed"

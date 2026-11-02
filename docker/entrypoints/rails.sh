@@ -24,15 +24,16 @@ done
 
 echo "Database ready to accept connections."
 
-#install missing gems for local dev as we are using base image compiled for production
-bundle install
+# The image already has the gems. Installing again on every boot only repeats
+# the resolve work; install when the lockfile actually changed.
+if ! bundle check; then
+  bundle install || exit 1
+fi
 
-BUNDLE="bundle check"
+# Editors on Windows keep saving these scripts with CRLF. `set -eu` then
+# exits before Rails starts. Strip the carriage return at run time.
+if [ "$1" = "sh" ] && [ -f "$2" ]; then
+  exec sh -c 'tr -d "$(printf "\r")" < "$1" | sh' sh "$2"
+fi
 
-until $BUNDLE
-do
-  sleep 2;
-done
-
-# Execute the main process of the container
 exec "$@"

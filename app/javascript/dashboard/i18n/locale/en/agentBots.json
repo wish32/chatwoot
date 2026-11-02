@@ -107,6 +107,9 @@
       "CREATE": "Create Bot",
       "UPDATE": "Update Bot"
     },
+    "TAKEHK": {
+      "DESCRIPTION": "AI replies are handled by the account webhook, TakeHK Desk AI. This bot is only used to assign the conversation and show the handover controls."
+    },
     "WEBHOOK": {
       "DESCRIPTION": "Configure a webhook bot to integrate with your custom services. The bot will receive and process events from conversations and can respond to them."
     },

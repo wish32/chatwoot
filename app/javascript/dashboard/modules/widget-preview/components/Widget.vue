@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToggle } from '@vueuse/core';
 import WidgetHead from './WidgetHead.vue';
@@ -8,6 +8,7 @@ import WidgetFooter from './WidgetFooter.vue';
 import TabBar from 'dashboard/components-next/tabbar/TabBar.vue';
 import Code from 'dashboard/components/Code.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
+import launcherLogo from 'dashboard/assets/images/takehk-mark.png';
 
 const props = defineProps({
   welcomeHeading: {
@@ -54,11 +55,34 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  directConversation: {
+    type: Boolean,
+    default: false,
+  },
+  quickActions: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const { t } = useI18n();
 
-const isChatMode = ref(false);
+const manualChatMode = ref(false);
+const isChatMode = computed({
+  get: () => props.directConversation || manualChatMode.value,
+  set: value => {
+    if (props.directConversation) return;
+    manualChatMode.value = value;
+  },
+});
+
+watch(
+  () => props.directConversation,
+  value => {
+    if (!value) manualChatMode.value = false;
+  }
+);
+
 const [isWidgetVisible, toggleWidget] = useToggle(true);
 
 const activeTabIndex = ref(0);
@@ -117,6 +141,7 @@ const getWidgetConfig = computed(() => ({
   isOnline: props.isOnline,
   replyTime: replyTimeText.value,
   color: props.color,
+  quickActions: props.quickActions,
 }));
 
 const getBubblePositionStyle = computed(() => ({
@@ -139,8 +164,8 @@ const handleTabChange = tab => {
 
 const handleToggleWidget = () => {
   toggleWidget();
-  if (isWidgetVisible.value) {
-    isChatMode.value = false;
+  if (isWidgetVisible.value && !props.directConversation) {
+    manualChatMode.value = false;
   }
 };
 </script>
@@ -194,10 +219,10 @@ const handleToggleWidget = () => {
           >
             <img
               v-if="!isWidgetVisible"
-              src="~dashboard/assets/images/bubble-logo.svg"
-              alt=""
+              :src="launcherLogo"
+              alt="TakeHK"
               draggable="false"
-              class="w-6 h-6 mx-auto"
+              class="w-8 h-8 mx-auto rounded-full bg-white object-contain"
             />
             <div v-if="isBubbleExpanded" class="ltr:pl-2.5 rtl:pr-2.5">
               {{ getWidgetBubbleLauncherTitle }}
@@ -222,7 +247,7 @@ const handleToggleWidget = () => {
           :script="widgetScript"
           lang="html"
           class="!text-start"
-          :codepen-title="`${websiteName} - Chatwoot Widget Test`"
+          :codepen-title="`${websiteName} - TakeHK`"
           enable-code-pen
         />
       </div>

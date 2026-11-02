@@ -6,6 +6,11 @@ const createConversationAPI = async content => {
   return API.post(urlData.url, urlData.params);
 };
 
+const openConversationAPI = async () => {
+  const urlData = endPoints.openConversation();
+  return API.post(urlData.url, urlData.params);
+};
+
 const sendMessageAPI = async (
   content,
   replyTo = null,
@@ -62,6 +67,12 @@ const toggleStatus = async () => {
   );
 };
 
+const recallMessageAPI = async messageId => {
+  return API.post(
+    `/api/v1/widget/messages/${messageId}/recall${window.location.search}`
+  );
+};
+
 const setCustomAttributes = async customAttributes => {
   return API.post(
     `/api/v1/widget/conversations/set_custom_attributes${window.location.search}`,
@@ -81,6 +92,7 @@ const deleteCustomAttribute = async customAttribute => {
 };
 
 export {
+  openConversationAPI,
   createConversationAPI,
   sendMessageAPI,
   getConversationAPI,
@@ -90,6 +102,7 @@ export {
   setUserLastSeenAt,
   sendEmailTranscript,
   toggleStatus,
+  recallMessageAPI,
   setCustomAttributes,
   deleteCustomAttribute,
 };

@@ -10,6 +10,11 @@
     "MESSAGE_BUBBLE": {
       "RETRY": "请重新发送消息",
       "ERROR_MESSAGE": "无法发送，请重试"
+    },
+    "MEDIA_VIEWER": {
+      "CLOSE": "关闭",
+      "PREVIOUS": "上一张",
+      "NEXT": "下一张"
     }
   },
   "THUMBNAIL": {
@@ -44,6 +49,21 @@
   },
   "START_CONVERSATION": "开始会话",
   "END_CONVERSATION": "结束对话",
+  "END_CONVERSATION_CONFIRM": {
+    "MESSAGE": "对话记录将会删除，是否继续",
+    "CONTINUE": "继续",
+    "CANCEL": "取消"
+  },
+  "MESSAGE_ACTIONS": {
+    "MENU": "消息操作",
+    "REPLY": "回复",
+    "COPY": "复制",
+    "RECALL": "撤回",
+    "DELETE": "删除",
+    "RECALLED": "你已撤回一条消息",
+    "COPIED": "已复制",
+    "RECALL_FAILED": "这条消息已不能撤回"
+  },
   "CONTINUE_CONVERSATION": "继续对话",
   "YOU": "您",
   "START_NEW_CONVERSATION": "开始新的对话",
@@ -96,6 +116,7 @@
     "REGEX_ERROR": "请提供一个有效的值"
   },
   "FILE_SIZE_LIMIT": "文件超过大小 {MAXIMUM_FILE_UPLOAD_SIZE} 附件限制",
+  "FILE_COUNT_LIMIT": "一次最多可以上传 {count} 个文件",
   "CHAT_FORM": {
     "INVALID": {
       "FIELD": "无效字段"
