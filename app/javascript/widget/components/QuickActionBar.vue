@@ -20,7 +20,7 @@ export default {
   },
   computed: {
     useChinese() {
-      return preferChineseLocale();
+      return preferChineseLocale(this.$i18n.locale);
     },
     items() {
       return resolveQuickActions(this.actions);

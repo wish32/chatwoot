@@ -7,11 +7,12 @@ export function visitorHasOpenedTopic(messages) {
   });
 }
 
-export function preferChineseLocale() {
-  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
-  if (nav.startsWith('zh')) return true;
-  if (nav.startsWith('en')) return false;
-  return nav.indexOf('hk') !== -1 || nav.indexOf('tw') !== -1;
+export function preferChineseLocale(locale) {
+  const value = String(locale || '')
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, '_');
+  return value === 'zh' || value.startsWith('zh_');
 }
 
 export function resolveQuickActions(source) {

@@ -24,6 +24,7 @@ import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents
 import { emitter } from 'shared/helpers/mitt';
 import { PRODUCT_COLOR } from 'shared/constants/productColor';
 import { readStoredTheme } from 'widget/helpers/threadTheme';
+import { normalizeWidgetLocale } from 'widget/helpers/takehkLocale';
 import {
   conversationEntryName,
   isDirectConversationEnabled,
@@ -166,18 +167,19 @@ export default {
       });
     },
     setLocale(localeWithVariation) {
-      if (!localeWithVariation) return;
+      const normalizedLocale = normalizeWidgetLocale(localeWithVariation);
+      if (!normalizedLocale) return;
       const { enabledLanguages } = window.chatwootWebChannel;
-      const localeWithoutVariation = localeWithVariation.split('_')[0];
+      const localeWithoutVariation = normalizedLocale.split('_')[0];
       const hasLocaleWithoutVariation = enabledLanguages.some(
         lang => lang.iso_639_1_code === localeWithoutVariation
       );
       const hasLocaleWithVariation = enabledLanguages.some(
-        lang => lang.iso_639_1_code === localeWithVariation
+        lang => lang.iso_639_1_code === normalizedLocale
       );
 
       if (hasLocaleWithVariation) {
-        this.$root.$i18n.locale = localeWithVariation;
+        this.$root.$i18n.locale = normalizedLocale;
       } else if (hasLocaleWithoutVariation) {
         this.$root.$i18n.locale = localeWithoutVariation;
       }

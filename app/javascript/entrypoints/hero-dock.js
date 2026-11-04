@@ -20,6 +20,8 @@ const DEFAULT_TOPICS = [
 ];
 const WIDGET_PREFIX = 'chatwoot-widget:';
 const STYLE_ID = 'takehk-hero-dock-styles';
+let pendingLocale = '';
+let liveChat = null;
 
 function reducedMotion() {
   return (
@@ -204,10 +206,11 @@ function mountStream(stream, topics, reduced) {
   window.requestAnimationFrame(frame);
 }
 
-function widgetSettings() {
+function widgetSettings(options) {
   const settings = readBrandSettings();
+  const fromOptions = options && options.locale;
   return {
-    locale: settings.locale,
+    locale: pendingLocale || fromOptions || settings.locale,
     position: settings.position === 'left' ? 'left' : 'right',
     hideMessageBubble: true,
     showPopoutButton: !!settings.showPopoutButton,
@@ -271,7 +274,7 @@ function createLiveChat(options, requestClose, onReady) {
       const authToken = message.config && message.config.authToken;
       if (authToken) writeCookie(cookieName, authToken);
       ready = true;
-      const config = widgetSettings();
+      const config = widgetSettings(options);
       if (!config.locale) delete config.locale;
       post({ event: 'config-set', ...config });
       post({
@@ -321,7 +324,16 @@ function createLiveChat(options, requestClose, onReady) {
       wantsOpen = !!isOpen;
       publishOpenState();
     },
+    applyLocale(locale) {
+      if (!ready || !locale) return;
+      post({ event: 'set-locale', locale });
+    },
   };
+}
+
+export function setLocale(locale) {
+  pendingLocale = locale == null ? '' : String(locale);
+  if (pendingLocale && liveChat) liveChat.applyLocale(pendingLocale);
 }
 
 function resolvePhrases(options) {
@@ -538,6 +550,7 @@ export function run(options) {
     widgetReady = true;
     if (dock) dock.classList.remove('is-loading');
   });
+  liveChat = widget;
   dockApi = mountDock(target, {
     phrases: resolvePhrases(settings),
     reducedMotion: reduced,

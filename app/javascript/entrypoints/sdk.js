@@ -106,7 +106,7 @@ const runSDK = ({ baseUrl, websiteToken }) => {
       IFrameHelper.events.popoutChatWindow({
         baseUrl: window.$chatwoot.baseUrl,
         websiteToken: window.$chatwoot.websiteToken,
-        locale,
+        locale: window.$chatwoot.locale,
       });
     },
 
@@ -184,6 +184,7 @@ const runSDK = ({ baseUrl, websiteToken }) => {
     },
 
     setLocale(localeToBeUsed = 'en') {
+      window.$chatwoot.locale = localeToBeUsed;
       IFrameHelper.sendMessage('set-locale', { locale: localeToBeUsed });
     },
 
